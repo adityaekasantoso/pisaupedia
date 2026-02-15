@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { FaMinus, FaPlus } from "react-icons/fa6";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ type CartCounterProps = {
   onRemove?: (value: number) => void;
   className?: string;
   initialValue?: number;
+  max?: number;
 };
 
 const CartCounter = ({
@@ -19,31 +20,43 @@ const CartCounter = ({
   onRemove,
   className,
   initialValue = 1,
+  max,
 }: CartCounterProps) => {
   const [counter, setCounter] = useState<number>(initialValue);
 
+  useEffect(() => {
+    setCounter(initialValue);
+  }, [initialValue]);
+
   const addToCart = () => {
+    if (max && counter >= max) return;
+
+    const newValue = counter + 1;
+    setCounter(newValue);
+
     if (onAdd) {
-      onAdd(counter + 1);
+      onAdd(newValue);
     }
-    setCounter(counter + 1);
   };
 
   const remove = () => {
     if ((counter === 1 && !isZeroDelete) || counter <= 0) return;
 
+    const newValue = counter - 1;
+    setCounter(newValue);
+
     if (onRemove) {
-      onRemove(counter - 1);
+      onRemove(newValue);
     }
-    if (counter - 1 <= 0) return;
-    setCounter(counter - 1);
   };
+
+  const isMaxReached = max ? counter >= max : false;
 
   return (
     <div
       className={cn(
         "bg-[#F0F0F0] w-full min-w-[110px] max-w-[110px] sm:max-w-[170px] py-3 md:py-3.5 px-4 sm:px-5 rounded-full flex items-center justify-between",
-        className
+        className,
       )}
     >
       <Button
@@ -51,19 +64,22 @@ const CartCounter = ({
         size="icon"
         type="button"
         className="h-5 w-5 sm:h-6 sm:w-6 text-xl hover:bg-transparent"
-        onClick={() => remove()}
+        onClick={remove}
       >
         <FaMinus />
       </Button>
-      <span className="font-medium text-sm sm:text-base">
-        {!isZeroDelete ? counter : initialValue}
-      </span>
+
+      <span className="font-medium text-sm sm:text-base">{counter}</span>
+
       <Button
         variant="ghost"
         size="icon"
         type="button"
-        className="h-5 w-5 sm:h-6 sm:w-6 text-xl hover:bg-transparent"
-        onClick={() => addToCart()}
+        disabled={isMaxReached}
+        className={`h-5 w-5 sm:h-6 sm:w-6 text-xl hover:bg-transparent ${
+          isMaxReached ? "opacity-40 cursor-not-allowed" : ""
+        }`}
+        onClick={addToCart}
       >
         <FaPlus />
       </Button>

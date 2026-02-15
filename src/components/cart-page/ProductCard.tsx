@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { PiTrashFill } from "react-icons/pi";
 import Image from "next/image";
 import Link from "next/link";
@@ -25,8 +24,8 @@ const ProductCard = ({ data }: ProductCardProps) => {
     data.discount.percentage > 0
       ? Math.round(data.price - (data.price * data.discount.percentage) / 100)
       : data.discount.amount > 0
-      ? Math.round(data.price - data.discount.amount)
-      : data.price;
+        ? Math.round(data.price - data.discount.amount)
+        : data.price;
 
   return (
     <div className="flex items-start space-x-4">
@@ -50,7 +49,7 @@ const ProductCard = ({ data }: ProductCardProps) => {
             href={`/shop/product/${data.id}/${data.name.split(" ").join("-")}`}
             className="text-black font-bold text-base xl:text-xl"
           >
-            {data.name}
+            {data.name.toUpperCase()}
           </Link>
 
           <Button
@@ -61,7 +60,7 @@ const ProductCard = ({ data }: ProductCardProps) => {
               dispatch(
                 remove({
                   id: data.id,
-                })
+                }),
               )
             }
           >
@@ -71,14 +70,11 @@ const ProductCard = ({ data }: ProductCardProps) => {
 
         <div className="flex items-center flex-wrap justify-between mt-auto">
           <div className="flex items-center space-x-[5px] xl:space-x-2.5">
-            <span className="font-bold text-black text-xl xl:text-2xl">
-              ${finalPrice}
-            </span>
+            <span className="font-bold text-black text-xl">Rp{finalPrice}</span>
 
-            {(data.discount.percentage > 0 ||
-              data.discount.amount > 0) && (
-              <span className="font-bold text-black/40 line-through text-xl xl:text-2xl">
-                ${data.price}
+            {(data.discount.percentage > 0 || data.discount.amount > 0) && (
+              <span className="font-bold text-black/40 line-through text-xl">
+                Rp{data.price}
               </span>
             )}
 
@@ -88,23 +84,23 @@ const ProductCard = ({ data }: ProductCardProps) => {
               </span>
             )}
 
-            {data.discount.amount > 0 &&
-              data.discount.percentage === 0 && (
-                <span className="font-medium text-[10px] xl:text-xs py-1.5 px-3.5 rounded-full bg-[#FF3333]/10 text-[#FF3333]">
-                  -${data.discount.amount}
-                </span>
-              )}
+            {data.discount.amount > 0 && data.discount.percentage === 0 && (
+              <span className="font-medium text-[10px] xl:text-xs py-1.5 px-3.5 rounded-full bg-[#FF3333]/10 text-[#FF3333]">
+                -Rp{data.discount.amount}
+              </span>
+            )}
           </div>
 
           <CartCounter
             initialValue={data.quantity}
+            max={data.stock}
             onAdd={() => dispatch(addToCart({ ...data, quantity: 1 }))}
             onRemove={() =>
               data.quantity === 1
                 ? dispatch(
                     remove({
                       id: data.id,
-                    })
+                    }),
                   )
                 : dispatch(removeCartItem({ id: data.id }))
             }

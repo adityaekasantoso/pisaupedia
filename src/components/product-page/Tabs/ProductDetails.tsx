@@ -1,63 +1,23 @@
-import React from "react";
+"use client";
 
-export type SpecItem = {
-  label: string;
-  value: string;
+export type ProductDetailsProps = {
+  specs: Record<string, string>;
 };
 
-const specsData: SpecItem[] = [
-  {
-    label: "Blade Shape",
-    value: "Taiwan Tuna",
-  },
-  {
-    label: "Steel Type",
-    value: "Carbon Steel ex Carl Schlieper Wooden Saw",
-  },
-  {
-    label: "Blade Length",
-    value: "170mm",
-  },
-  {
-    label: "Blade Height",
-    value: "90mm",
-  },
-  {
-    label: "Spine Thickness",
-    value: "2.5mm",
-  },
-  {
-    label: "Handle Length",
-    value: "130mm",
-  },
-  {
-    label: "Handle Type",
-    value: "Wa Handle",
-  },
-  {
-    label: "Handle Materials",
-    value: "Teakwood",
-  },
-];
+const ProductDetails = ({ specs }: ProductDetailsProps) => {
+  if (!specs) return null;
 
-const ProductDetails = () => {
   return (
-    <>
-      {specsData.map((item, i) => (
-        <div className="grid grid-cols-3" key={i}>
-          <div>
-            <p className="text-sm py-3 w-full leading-7 lg:py-4 pr-2 text-neutral-500">
-              {item.label}
-            </p>
-          </div>
-          <div className="col-span-2 py-3 lg:py-4 border-b">
-            <p className="text-sm w-full leading-7 text-neutral-800 font-medium">
-              {item.value}
-            </p>
-          </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10">
+      {Object.entries(specs).map(([label, value], i) => (
+        <div key={i} className="flex justify-between border-b py-3 lg:py-4">
+          <p className="text-sm text-neutral-500 pr-4">{label}</p>
+          <p className="text-sm text-neutral-800 font-medium text-right">
+            {value}
+          </p>
         </div>
       ))}
-    </>
+    </div>
   );
 };
 

@@ -10,5 +10,8 @@ export type Product = {
   gallery?: string[];
   price: number;
   discount: Discount;
+  desc: string;
   rating: number;
+  stock: number;
+  specification: Record<string, string>;
 };

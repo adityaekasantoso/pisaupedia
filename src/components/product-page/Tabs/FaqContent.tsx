@@ -1,4 +1,3 @@
-import React from "react";
 import {
   Accordion,
   AccordionContent,
@@ -31,31 +30,6 @@ const faqsData: FaqItem[] = [
     question: "How should I care for and maintain my knife?",
     answer:
       "We recommend hand washing your knife with mild soap and drying it immediately after use. Avoid dishwashers, store in a knife block or sheath, and regularly sharpen using a whetstone or sharpening tool to maintain optimal performance.",
-  },
-  {
-    question: "Do you offer sharpening services?",
-    answer:
-      "Currently, we provide sharpening guides and tools for purchase. Detailed instructions are available to help you maintain your knife’s sharpness at home.",
-  },
-  {
-    question: "What are the shipping options and delivery times?",
-    answer:
-      "We offer standard and express shipping options. Delivery times typically range from 2–7 business days depending on your location. Shipping costs are calculated at checkout.",
-  },
-  {
-    question: "Do you ship internationally?",
-    answer:
-      "Yes, we provide international shipping to selected countries. Shipping fees and delivery times vary depending on the destination.",
-  },
-  {
-    question: "What is your return and warranty policy?",
-    answer:
-      "We offer a 7–14 day return policy for unused items in their original packaging. Additionally, selected products come with a warranty covering manufacturing defects.",
-  },
-  {
-    question: "Are your knives authentic and original?",
-    answer:
-      "Yes, all knives sold on our website are 100% authentic and sourced directly from trusted manufacturers or official distributors.",
   },
 ];
 

@@ -1,4 +1,3 @@
-import React from "react";
 import Rating from "../ui/Rating";
 import Image from "next/image";
 import Link from "next/link";
@@ -9,10 +8,14 @@ type ProductCardProps = {
 };
 
 const ProductCard = ({ data }: ProductCardProps) => {
+  const isOutOfStock = data.stock === 0;
+
   return (
     <Link
       href={`/shop/product/${data.id}/${data.title.split(" ").join("-")}`}
-      className="flex flex-col items-start aspect-auto"
+      className={`flex flex-col items-start aspect-auto ${
+        isOutOfStock ? "opacity-60 pointer-events-none" : ""
+      }`}
     >
       <div className="bg-[#F0EEED] rounded-[13px] lg:rounded-[20px] w-full lg:max-w-[295px] aspect-square mb-2.5 xl:mb-4 overflow-hidden">
         <Image
@@ -24,57 +27,63 @@ const ProductCard = ({ data }: ProductCardProps) => {
           priority
         />
       </div>
-      <strong className="text-black xl:text-xl">{data.title}</strong>
-      <div className="flex items-end mb-1 xl:mb-2">
-        <Rating
-          initialValue={data.rating}
-          allowFraction
-          SVGclassName="inline-block"
-          emptyClassName="fill-gray-50"
-          size={19}
-          readonly
-        />
-        <span className="text-black text-xs xl:text-sm ml-[11px] xl:ml-[13px] pb-0.5 xl:pb-0">
-          {data.rating.toFixed(1)}
-          <span className="text-black/60">/5</span>
-        </span>
+
+      <strong className="text-black xl:text-l">
+        {data.title.toUpperCase()}
+      </strong>
+
+      <div className="flex items-center justify-between w-full mb-1 xl:mb-2">
+        <div className="flex items-end">
+          <Rating
+            initialValue={data.rating}
+            allowFraction
+            SVGclassName="inline-block"
+            emptyClassName="fill-gray-50"
+            size={19}
+            readonly
+          />
+          <span className="text-black text-xs xl:text-sm ml-[11px] xl:ml-[13px] pb-0.5">
+            {data.rating.toFixed(1)}
+            <span className="text-black/60">/5</span>
+          </span>
+        </div>
       </div>
-      <div className="flex items-center space-x-[5px] xl:space-x-2.5">
-        {data.discount.percentage > 0 ? (
-          <span className="font-bold text-black text-xl xl:text-2xl">
-            {`$${Math.round(
-              data.price - (data.price * data.discount.percentage) / 100
-            )}`}
-          </span>
-        ) : data.discount.amount > 0 ? (
-          <span className="font-bold text-black text-xl xl:text-2xl">
-            {`$${data.price - data.discount.amount}`}
-          </span>
-        ) : (
-          <span className="font-bold text-black text-xl xl:text-2xl">
-            ${data.price}
-          </span>
-        )}
-        {data.discount.percentage > 0 && (
-          <span className="font-bold text-black/40 line-through text-xl xl:text-2xl">
-            ${data.price}
-          </span>
-        )}
-        {data.discount.amount > 0 && (
-          <span className="font-bold text-black/40 line-through text-xl xl:text-2xl">
-            ${data.price}
-          </span>
-        )}
-        {data.discount.percentage > 0 ? (
-          <span className="font-medium text-[10px] xl:text-xs py-1.5 px-3.5 rounded-full bg-[#FF3333]/10 text-[#FF3333]">
-            {`-${data.discount.percentage}%`}
-          </span>
-        ) : (
-          data.discount.amount > 0 && (
-            <span className="font-medium text-[10px] xl:text-xs py-1.5 px-3.5 rounded-full bg-[#FF3333]/10 text-[#FF3333]">
-              {`-$${data.discount.amount}`}
+
+      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 xl:gap-2.5">
+        <div className="flex items-center gap-2">
+          {data.discount.percentage > 0 ? (
+            <span className="font-bold text-black text-sm sm:text-base md:text-lg xl:text-xl">
+              {`Rp${Math.round(
+                data.price - (data.price * data.discount.percentage) / 100,
+              )}`}
             </span>
-          )
+          ) : data.discount.amount > 0 ? (
+            <span className="font-bold text-black text-sm sm:text-base md:text-lg xl:text-xl">
+              {`Rp${data.price - data.discount.amount}`}
+            </span>
+          ) : (
+            <span className="font-bold text-black text-sm sm:text-base md:text-lg xl:text-xl">
+              Rp{data.price}
+            </span>
+          )}
+
+          {data.discount.percentage > 0 && (
+            <span className="font-medium text-[10px] xl:text-xs py-1 px-2 rounded-full bg-[#FF3333]/10 text-[#FF3333]">
+              -{data.discount.percentage}%
+            </span>
+          )}
+
+          {data.discount.amount > 0 && (
+            <span className="font-medium text-[10px] xl:text-xs py-1 px-2 rounded-full bg-[#FF3333]/10 text-[#FF3333]">
+              -Rp{data.discount.amount}
+            </span>
+          )}
+        </div>
+
+        {(data.discount.percentage > 0 || data.discount.amount > 0) && (
+          <span className="font-bold text-black/40 line-through text-sm sm:text-base md:text-lg xl:text-xl">
+            Rp{data.price}
+          </span>
         )}
       </div>
     </Link>

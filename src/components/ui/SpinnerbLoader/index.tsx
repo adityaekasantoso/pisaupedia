@@ -1,4 +1,3 @@
-import React from "react";
 import s from "./SpinnerbLoader.module.css";
 import cn from "clsx";
 

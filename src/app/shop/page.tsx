@@ -1,5 +1,20 @@
-import BreadcrumbShop from "@/components/shop-page/BreadcrumbShop";
+"use client";
 
+import React, { useEffect, useState } from "react";
+import BreadcrumbShop from "@/components/shop-page/BreadcrumbShop";
+import ProductCard from "@/components/common/ProductCard";
+import { Product } from "@/types/product.types";
+import Filters from "@/components/shop-page/filters";
+import MobileFilters from "@/components/shop-page/filters/MobileFilters";
+import { FiSliders } from "react-icons/fi";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
   Select,
   SelectContent,
@@ -7,22 +22,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import MobileFilters from "@/components/shop-page/filters/MobileFilters";
-import Filters from "@/components/shop-page/filters";
-import { FiSliders } from "react-icons/fi";
-import { newArrivalsData, relatedProductData, topSellingData } from "../page";
-import ProductCard from "@/components/common/ProductCard";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 
 export default function ShopPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(12);
+  const [sort, setSort] = useState("most-popular");
+  const [total, setTotal] = useState(0);
+
+  useEffect(() => {
+    fetch(`/api/product?page=${page}&limit=${limit}&sort=${sort}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setProducts(data.data);
+        setTotal(data.total);
+      });
+  }, [page, limit, sort]);
+
   return (
     <main className="pb-20">
       <div className="max-w-frame mx-auto px-4 xl:px-0">
@@ -43,11 +59,11 @@ export default function ShopPage() {
               </div>
               <div className="flex flex-col sm:items-center sm:flex-row">
                 <span className="text-sm md:text-base text-black/60 mr-3">
-                  Showing 1-10 of 100 Products
+                  Showing {products.length} of {total} Products
                 </span>
                 <div className="flex items-center">
                   Sort by:{" "}
-                  <Select defaultValue="most-popular">
+                  <Select defaultValue={sort} onValueChange={setSort}>
                     <SelectTrigger className="font-medium text-sm px-1.5 sm:text-base w-fit text-black bg-transparent shadow-none border-none">
                       <SelectValue />
                     </SelectTrigger>
@@ -60,74 +76,55 @@ export default function ShopPage() {
                 </div>
               </div>
             </div>
+
             <div className="w-full grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
-              {[
-                ...relatedProductData.slice(1, 4),
-                ...newArrivalsData.slice(1, 4),
-                ...topSellingData.slice(1, 4),
-              ].map((product) => (
-                <ProductCard key={product.id} data={product} />
+              {products.map((product) => (
+                <div key={product.id} className="relative">
+                  <div
+                    className={
+                      product.stock === 0
+                        ? "opacity-60 pointer-events-none"
+                        : ""
+                    }
+                  >
+                    <ProductCard data={product} />
+                  </div>
+                </div>
               ))}
             </div>
+
             <hr className="border-t-black/10" />
             <Pagination className="justify-between">
-              <PaginationPrevious href="#" className="border border-black/10" />
+              <PaginationPrevious
+                href="#"
+                className="border border-black/10"
+                onClick={() => setPage(page - 1 > 0 ? page - 1 : 1)}
+              />
               <PaginationContent>
-                <PaginationItem>
-                  <PaginationLink
-                    href="#"
-                    className="text-black/50 font-medium text-sm"
-                    isActive
-                  >
-                    1
-                  </PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink
-                    href="#"
-                    className="text-black/50 font-medium text-sm"
-                  >
-                    2
-                  </PaginationLink>
-                </PaginationItem>
-                <PaginationItem className="hidden lg:block">
-                  <PaginationLink
-                    href="#"
-                    className="text-black/50 font-medium text-sm"
-                  >
-                    3
-                  </PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationEllipsis className="text-black/50 font-medium text-sm" />
-                </PaginationItem>
-                <PaginationItem className="hidden lg:block">
-                  <PaginationLink
-                    href="#"
-                    className="text-black/50 font-medium text-sm"
-                  >
-                    8
-                  </PaginationLink>
-                </PaginationItem>
-                <PaginationItem className="hidden sm:block">
-                  <PaginationLink
-                    href="#"
-                    className="text-black/50 font-medium text-sm"
-                  >
-                    9
-                  </PaginationLink>
-                </PaginationItem>
-                <PaginationItem>
-                  <PaginationLink
-                    href="#"
-                    className="text-black/50 font-medium text-sm"
-                  >
-                    10
-                  </PaginationLink>
-                </PaginationItem>
+                {Array.from({ length: Math.ceil(total / limit) }).map(
+                  (_, i) => (
+                    <PaginationItem key={i}>
+                      <PaginationLink
+                        href="#"
+                        isActive={i + 1 === page}
+                        onClick={() => setPage(i + 1)}
+                        className="text-black/50 font-medium text-sm"
+                      >
+                        {i + 1}
+                      </PaginationLink>
+                    </PaginationItem>
+                  ),
+                )}
               </PaginationContent>
-
-              <PaginationNext href="#" className="border border-black/10" />
+              <PaginationNext
+                href="#"
+                className="border border-black/10"
+                onClick={() =>
+                  setPage(
+                    page + 1 <= Math.ceil(total / limit) ? page + 1 : page,
+                  )
+                }
+              />
             </Pagination>
           </div>
         </div>
