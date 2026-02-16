@@ -47,7 +47,7 @@ const ProductCard = ({ data }: ProductCardProps) => {
         <div className="flex items-center justify-between">
           <Link
             href={`/shop/product/${data.id}/${data.name.split(" ").join("-")}`}
-            className="text-black font-bold text-base xl:text-xl"
+            className="text-black font-bold text-base text-xl"
           >
             {data.name.toUpperCase()}
           </Link>

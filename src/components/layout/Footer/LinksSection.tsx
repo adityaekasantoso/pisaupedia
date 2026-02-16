@@ -3,28 +3,33 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const footerLinksData: FooterLinks[] = [
-  
+  {
+    id: 1,
+    title: "company",
+    children: [
+      {
+        id: 101,
+        label: "about",
+        url: "#",
+      },
+    ],
+  },
   {
     id: 2,
     title: "help",
     children: [
       {
-        id: 21,
+        id: 201,
         label: "customer support",
         url: "#",
       },
       {
-        id: 22,
-        label: "delivery details",
-        url: "#",
-      },
-      {
-        id: 23,
+        id: 202,
         label: "terms & conditions",
         url: "#",
       },
       {
-        id: 24,
+        id: 203,
         label: "privacy policy",
         url: "#",
       },
@@ -35,34 +40,23 @@ const footerLinksData: FooterLinks[] = [
     title: "faq",
     children: [
       {
-        id: 31,
+        id: 301,
         label: "account",
         url: "#",
       },
       {
-        id: 32,
+        id: 302,
         label: "manage deliveries",
         url: "#",
       },
       {
-        id: 33,
+        id: 303,
         label: "orders",
         url: "#",
       },
       {
-        id: 34,
+        id: 304,
         label: "payments",
-        url: "#",
-      },
-    ],
-  },
-  {
-    id: 1,
-    title: "company",
-    children: [
-      {
-        id: 11,
-        label: "about",
         url: "#",
       },
     ],
@@ -72,8 +66,8 @@ const footerLinksData: FooterLinks[] = [
     title: "resources",
     children: [
       {
-        id: 41,
-        label: "eBooks",
+        id: 401,
+        label: "catalog",
         url: "#",
       },
     ],

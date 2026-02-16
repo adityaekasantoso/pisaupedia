@@ -25,14 +25,6 @@ export default function CartPage() {
         {cart && cart.items.length > 0 ? (
           <>
             <BreadcrumbCart />
-            <h2
-              className={cn([
-                integralCF.className,
-                "font-bold text-[32px] md:text-[40px] text-black uppercase mb-5 md:mb-6",
-              ])}
-            >
-              your cart
-            </h2>
             <div className="flex flex-col lg:flex-row space-y-5 lg:space-y-0 lg:space-x-5 items-start">
               <div className="w-full p-3.5 md:px-6 flex-col space-y-4 md:space-y-6 rounded-[20px] border border-black/10">
                 {cart?.items.map((product, idx, arr) => (

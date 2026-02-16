@@ -1,7 +1,12 @@
 import { cn } from "@/lib/utils";
 import { integralCF } from "@/styles/fonts";
 import { PaymentBadge, SocialNetworks } from "./footer.types";
-import { FaFacebookF, FaMapMarkerAlt, FaInstagram, FaTwitter } from "react-icons/fa";
+import {
+  FaFacebookF,
+  FaMapMarkerAlt,
+  FaInstagram,
+  FaTwitter,
+} from "react-icons/fa";
 import Link from "next/link";
 import LinksSection from "./LinksSection";
 import Image from "next/image";
@@ -24,7 +29,6 @@ const socialsData: SocialNetworks[] = [
     icon: <FaInstagram />,
     url: "https://instagram.com",
   },
-  
 ];
 const paymentBadgesData: PaymentBadge[] = [
   {
@@ -39,7 +43,6 @@ const paymentBadgesData: PaymentBadge[] = [
     id: 3,
     srcUrl: "/icons/paypal.svg",
   },
-  
 ];
 
 const Footer = () => {
@@ -63,14 +66,15 @@ const Footer = () => {
               >
                 PISAUPEDIA
               </h1>
-<p className="text-black/60 text-sm mb-3">
-  Discover high-quality knives for every kitchen need. Sharp, durable, and designed for precision cutting.
-</p>
+              <p className="text-black/60 text-sm mb-3">
+                Pisaupedia is a premium knife brand crafting sharp, durable
+                blades for precision cutting.{" "}
+              </p>
 
-<div className="flex items-center text-black/60 text-sm mb-9">
-  <FaMapMarkerAlt className="mr-2" />
-  <span>Bekasi, Indonesia</span>
-</div>
+              <div className="flex items-center text-black/60 text-sm mb-9">
+                <FaMapMarkerAlt className="mr-2" />
+                <span>From Bekasi, Indonesia</span>
+              </div>
               <div className="flex items-center">
                 {socialsData.map((social) => (
                   <Link
@@ -94,7 +98,7 @@ const Footer = () => {
           <hr className="h-[1px] border-t-black/10 mb-6" />
           <div className="flex flex-col sm:flex-row justify-center sm:justify-between items-center mb-2">
             <p className="text-sm text-center sm:text-left text-black/60 mb-4 sm:mb-0 sm:mr-1">
-              PISAUPEDIA © 2026 All rights reserved.
+              PISAUPEDIA © {new Date().getFullYear()} All rights reserved.
             </p>
             <div className="flex items-center">
               {paymentBadgesData.map((badge, _, arr) => (

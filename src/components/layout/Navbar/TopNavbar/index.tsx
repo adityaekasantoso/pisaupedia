@@ -16,26 +16,27 @@ import CartBtn from "./CartBtn";
 
 const data: NavMenu = [
   {
+    id: 1,
+    type: "MenuItem",
+    label: "Shop",
+    url: "/shop",
+    children: [],
+  },
+  {
     id: 2,
     type: "MenuItem",
-    label: "On Sale",
-    url: "/shop#on-sale",
+    label: "My Orders",
+    url: "/orders",
     children: [],
   },
   {
     id: 3,
     type: "MenuItem",
-    label: "New Product",
-    url: "/shop#new-product",
+    label: "Blog",
+    url: "/blog",
     children: [],
   },
-  {
-    id: 4,
-    type: "MenuItem",
-    label: "Pree Orders",
-    url: "/shop#pree-orders",
-    children: [],
-  },
+ 
 ];
 
 const TopNavbar = () => {
@@ -46,18 +47,16 @@ const TopNavbar = () => {
           <div className="block md:hidden mr-4">
             <ResTopNavbar data={data} />
           </div>
-
           <Link
             href="/"
             className={cn([
               integralCF.className,
-              "text-2xl lg:text-[32px] mb-2 mr-3 lg:mr-10 text-black",
+              "text-2xl lg:text-[32px] mb-2 mr-3 lg:mr-10",
             ])}
           >
             PISAUPEDIA
           </Link>
         </div>
-
         <NavigationMenu className="hidden md:flex mr-2 lg:mr-7">
           <NavigationMenuList>
             {data.map((item) => (
@@ -72,7 +71,6 @@ const TopNavbar = () => {
             ))}
           </NavigationMenuList>
         </NavigationMenu>
-
         <InputGroup className="hidden md:flex bg-[#F0F0F0] mr-3 lg:mr-10">
           <InputGroup.Text>
             <Image
@@ -88,10 +86,9 @@ const TopNavbar = () => {
             type="search"
             name="search"
             placeholder="Search for products..."
-            className="bg-transparent"
+            className="bg-transparent placeholder:text-black/40"
           />
         </InputGroup>
-
         <div className="flex items-center">
           <Link href="/search" className="block md:hidden mr-[14px] p-1">
             <Image

@@ -23,12 +23,14 @@ const Header = () => {
             transition={{ delay: 0.3, duration: 0.6 }}
             className={cn([
               integralCF.className,
-              "text-4xl lg:text-[64px] lg:leading-[64px] mb-5 lg:mb-8 text-[#FFD966] drop-shadow-[0_6px_25px_rgba(255,215,130,0.5)] text-center md:text-left",
+              "text-4xl lg:text-[64px] lg:leading-[64px] mb-5 lg:mb-8 text-center md:text-left",
+              "bg-gradient-to-r from-[#FFF3B0] via-[#FFD966] to-[#C9A227]",
+              "bg-clip-text text-transparent",
+              "drop-shadow-[0_8px_30px_rgba(201,162,39,0.35)]",
             ])}
           >
             CRAFTED FOR PRECISION. BUILT TO LAST.
           </motion.h2>
-
           <motion.p
             initial={{ y: "100px", opacity: 0 }}
             whileInView={{ y: "0", opacity: 1 }}
