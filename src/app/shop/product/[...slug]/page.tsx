@@ -7,27 +7,49 @@ import BreadcrumbProduct from "@/components/product-page/BreadcrumbProduct";
 import Tabs from "@/components/product-page/Tabs";
 import ProductListSec from "@/components/common/ProductListSec";
 import { Product } from "@/types/product.types";
+import { useCurrency } from "@/context/CurrencyContext";
 
 export default function ProductPage() {
   const params = useParams();
+  const { currency } = useCurrency();
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
+
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/product?page=1&limit=100`)
-      .then((res) => res.json())
-      .then((data) => {
-        const allProducts = [...data.data];
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch("http://localhost:3001/api/products");
+        const allProducts: Product[] = await res.json();
+
         const prod = allProducts.find((p: Product) => p.id === Number(slug));
         if (!prod) {
           setProduct(null);
-        } else {
-          setProduct(prod);
-          setRelatedProducts(allProducts.filter((p) => p.id !== prod.id));
+          return;
         }
-      });
-  }, [slug]);
+
+        setProduct(prod);
+        setRelatedProducts(allProducts.filter((p) => p.id !== prod.id));
+      } catch {
+        setProduct(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (slug) fetchProduct();
+  }, [slug, currency]);
+
+  if (loading) {
+    return (
+      <main className="min-h-[70vh] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-black/20 border-t-black rounded-full animate-spin"></div>
+      </main>
+    );
+  }
 
   if (!product) {
     return (

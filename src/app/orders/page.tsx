@@ -55,7 +55,6 @@ export default function OrdersPage() {
     null,
   );
 
-  // Hitung total order
   const calculateTotal = (order: (typeof orders)[0]) =>
     order.products.reduce((acc, p) => acc + p.price * p.quantity, 0);
 

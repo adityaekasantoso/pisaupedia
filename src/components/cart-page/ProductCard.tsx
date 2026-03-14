@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { PiTrashFill } from "react-icons/pi";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,81 +13,100 @@ import {
   removeCartItem,
 } from "@/lib/features/carts/cartsSlice";
 import { useAppDispatch } from "@/lib/hooks/redux";
+import { useCurrency } from "@/context/CurrencyContext";
 
 type ProductCardProps = {
-  data: CartItem;
+  data?: CartItem;
 };
 
 const ProductCard = ({ data }: ProductCardProps) => {
   const dispatch = useAppDispatch();
+  const { currency } = useCurrency();
+
+  if (!data) return null;
+
+  const percentage = data.discount_percentage ?? 0;
+
+  const basePrice =
+    currency === "USD"
+      ? Number(data.price_usd ?? 0)
+      : Number(data.price_idr ?? 0);
 
   const finalPrice =
-    data.discount.percentage > 0
-      ? Math.round(data.price - (data.price * data.discount.percentage) / 100)
-      : data.discount.amount > 0
-        ? Math.round(data.price - data.discount.amount)
-        : data.price;
+    percentage > 0
+      ? Math.round(basePrice - (basePrice * percentage) / 100)
+      : basePrice;
+
+  const formatPrice = (value: number) => {
+    if (currency === "USD") {
+      return `$${value.toLocaleString("en-US", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
+    }
+
+    return `Rp${value.toLocaleString("id-ID")}`;
+  };
+
+  const imageSrc =
+    data.srcUrl && data.srcUrl.trim() !== ""
+      ? data.srcUrl
+      : "/images/no-image.png";
+
+  const slug = data.name
+    ? data.name.toLowerCase().replace(/\s+/g, "-")
+    : "product";
 
   return (
-    <div className="flex items-start space-x-4">
+    <div className="flex items-start space-x-2 sm:space-x-4">
       <Link
-        href={`/shop/product/${data.id}/${data.name.split(" ").join("-")}`}
-        className="bg-[#F0EEED] rounded-lg w-full min-w-[100px] max-w-[100px] sm:max-w-[124px] aspect-square overflow-hidden"
+        href={`/shop/product/${data.id}/${slug}`}
+        className="bg-[#F0EEED] rounded-lg w-[80px] sm:w-[100px] aspect-square overflow-hidden"
       >
         <Image
-          src={data.srcUrl}
+          src={imageSrc}
           width={124}
           height={124}
           className="rounded-md w-full h-full object-cover hover:scale-110 transition-all duration-500"
-          alt={data.name}
+          alt={data.name ?? "product"}
           priority
         />
       </Link>
 
-      <div className="flex w-full self-stretch flex-col">
+      <div className="flex w-full flex-col">
         <div className="flex items-center justify-between">
           <Link
-            href={`/shop/product/${data.id}/${data.name.split(" ").join("-")}`}
-            className="text-black font-bold text-base text-xl"
+            href={`/shop/product/${data.id}/${slug}`}
+            className="text-black font-bold text-sm sm:text-base xl:text-xl"
           >
-            {data.name.toUpperCase()}
+            {data.name}
           </Link>
 
           <Button
             variant="ghost"
             size="icon"
-            className="h-5 w-5 md:h-9 md:w-9"
-            onClick={() =>
-              dispatch(
-                remove({
-                  id: data.id,
-                }),
-              )
-            }
+            className="h-5 w-5 sm:h-9 sm:w-9"
+            onClick={() => dispatch(remove({ id: data.id }))}
           >
-            <PiTrashFill className="text-xl md:text-2xl text-red-600" />
+            <PiTrashFill className="text-lg sm:text-2xl text-red-600" />
           </Button>
         </div>
 
         <div className="flex items-center flex-wrap justify-between mt-auto">
-          <div className="flex items-center space-x-[5px] xl:space-x-2.5">
-            <span className="font-bold text-black text-xl">Rp{finalPrice}</span>
+          <div className="flex items-center space-x-1 sm:space-x-2.5">
+            <span className="font-bold text-sm sm:text-xl xl:text-2xl">
+              {formatPrice(finalPrice)}
+            </span>
 
-            {(data.discount.percentage > 0 || data.discount.amount > 0) && (
-              <span className="font-bold text-black/40 line-through text-xl">
-                Rp{data.price}
+            {percentage > 0 && (
+              <span className="font-bold text-black/40 line-through text-xs sm:text-xl">
+                {formatPrice(basePrice)}
               </span>
             )}
 
-            {data.discount.percentage > 0 && (
-              <span className="font-medium text-[10px] xl:text-xs py-1.5 px-3.5 rounded-full bg-[#FF3333]/10 text-[#FF3333]">
-                -{data.discount.percentage}%
-              </span>
-            )}
-
-            {data.discount.amount > 0 && data.discount.percentage === 0 && (
-              <span className="font-medium text-[10px] xl:text-xs py-1.5 px-3.5 rounded-full bg-[#FF3333]/10 text-[#FF3333]">
-                -Rp{data.discount.amount}
+            {percentage > 0 && (
+              <span className="font-medium text-[8px] sm:text-[10px] xl:text-xs py-1 px-2 sm:py-1.5 sm:px-3 rounded-full bg-[#FF3333]/10 text-[#FF3333]">
+                -{percentage}%
               </span>
             )}
           </div>
@@ -94,18 +114,21 @@ const ProductCard = ({ data }: ProductCardProps) => {
           <CartCounter
             initialValue={data.quantity}
             max={data.stock}
-            onAdd={() => dispatch(addToCart({ ...data, quantity: 1 }))}
+            onAdd={() =>
+              dispatch(
+                addToCart({
+                  ...data,
+                  quantity: data.quantity + 1,
+                })
+              )
+            }
             onRemove={() =>
               data.quantity === 1
-                ? dispatch(
-                    remove({
-                      id: data.id,
-                    }),
-                  )
+                ? dispatch(remove({ id: data.id }))
                 : dispatch(removeCartItem({ id: data.id }))
             }
             isZeroDelete
-            className="px-5 py-3 max-h-8 md:max-h-10 min-w-[105px] max-w-[105px] sm:max-w-32"
+            className="px-3 py-2 sm:px-5 sm:py-3 max-h-7 sm:max-h-10 min-w-[80px] sm:min-w-[105px] max-w-[105px] sm:max-w-32"
           />
         </div>
       </div>

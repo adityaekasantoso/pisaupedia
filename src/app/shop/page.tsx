@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import BreadcrumbShop from "@/components/shop-page/BreadcrumbShop";
 import ProductCard from "@/components/common/ProductCard";
-import { Product } from "@/types/product.types";
 import Filters from "@/components/shop-page/filters";
 import MobileFilters from "@/components/shop-page/filters/MobileFilters";
 import { FiSliders } from "react-icons/fi";
@@ -15,29 +15,56 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Product } from "@/types/product.types";
+import { useCurrency } from "@/context/CurrencyContext";
 
 export default function ShopPage() {
-  const [products, setProducts] = useState<Product[]>([]);
+  const { currency } = useCurrency();
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(12);
-  const [sort, setSort] = useState("most-popular");
-  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const category = searchParams.get("category") || "";
 
   useEffect(() => {
-    fetch(`/api/product?page=${page}&limit=${limit}&sort=${sort}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setProducts(data.data);
-        setTotal(data.total);
-      });
-  }, [page, limit, sort]);
+    setPage(1);
+  }, [category, currency]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch("http://localhost:3001/api/products");
+        const data: Product[] = await res.json();
+        setAllProducts(data);
+      } catch {
+        setAllProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  const filteredProducts = useMemo(() => {
+    let products = [...allProducts];
+    if (category) {
+      products = products.filter(
+        (p) => p.category.toLowerCase() === category.toLowerCase(),
+      );
+    }
+    return products;
+  }, [allProducts, category]);
+
+  const total = filteredProducts.length;
+  const totalPages = Math.ceil(total / limit);
+
+  const products = useMemo(() => {
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    return filteredProducts.slice(start, end);
+  }, [filteredProducts, page, limit]);
 
   return (
     <main className="pb-20">
@@ -52,80 +79,71 @@ export default function ShopPage() {
             </div>
             <Filters />
           </div>
+
           <div className="flex flex-col w-full space-y-5">
-            <div className="flex flex-col lg:flex-row lg:justify-between">
-              <div className="flex items-center justify-between">
-                <MobileFilters />
-              </div>
-              <div className="flex flex-col sm:items-center sm:flex-row">
-                <span className="text-sm md:text-base text-black/60 mr-3">
-                  Showing {products.length} of {total} Products
-                </span>
-                <div className="flex items-center">
-                  Sort by:{" "}
-                  <Select defaultValue={sort} onValueChange={setSort}>
-                    <SelectTrigger className="font-medium text-sm px-1.5 sm:text-base w-fit text-black bg-transparent shadow-none border-none">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="most-popular">Most Popular</SelectItem>
-                      <SelectItem value="low-price">Low Price</SelectItem>
-                      <SelectItem value="high-price">High Price</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
+            <MobileFilters />
 
-            <div className="w-full grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
-              {products.map((product) => (
-                <div key={product.id} className="relative">
-                  <div
-                    className={
-                      product.stock === 0
-                        ? "opacity-60 pointer-events-none"
-                        : ""
-                    }
-                  >
-                    <ProductCard data={product} />
+            {loading ? (
+              <div className="flex justify-center items-center py-20">
+                <div className="w-10 h-10 border-4 border-black/20 border-t-black rounded-full animate-spin"></div>
+              </div>
+            ) : (
+              <div className="w-full grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">
+                {products.map((product) => (
+                  <div key={product.id} className="relative">
+                    <div
+                      className={
+                        product.stock === 0
+                          ? "opacity-60 pointer-events-none"
+                          : ""
+                      }
+                    >
+                      <ProductCard data={product} />
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
 
-            <hr className="border-t-black/10" />
-            <Pagination className="justify-between">
-              <PaginationPrevious
-                href="#"
-                className="border border-black/10"
-                onClick={() => setPage(page - 1 > 0 ? page - 1 : 1)}
-              />
-              <PaginationContent>
-                {Array.from({ length: Math.ceil(total / limit) }).map(
-                  (_, i) => (
-                    <PaginationItem key={i}>
-                      <PaginationLink
-                        href="#"
-                        isActive={i + 1 === page}
-                        onClick={() => setPage(i + 1)}
-                        className="text-black/50 font-medium text-sm"
-                      >
-                        {i + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ),
-                )}
-              </PaginationContent>
-              <PaginationNext
-                href="#"
-                className="border border-black/10"
-                onClick={() =>
-                  setPage(
-                    page + 1 <= Math.ceil(total / limit) ? page + 1 : page,
-                  )
-                }
-              />
-            </Pagination>
+            {!loading && totalPages > 1 && (
+              <>
+                <hr className="border-t-black/10" />
+                <Pagination className="justify-between">
+                  <PaginationPrevious
+                    href="#"
+                    className="border border-black/10"
+                    onClick={() =>
+                      setPage((prev) => (prev - 1 > 0 ? prev - 1 : 1))
+                    }
+                  />
+
+                  <PaginationContent>
+                    {Array.from({ length: totalPages }).map((_, i) => (
+                      <PaginationItem key={i}>
+                        <PaginationLink
+                          href="#"
+                          isActive={i + 1 === page}
+                          onClick={() => setPage(i + 1)}
+                          className="text-black/50 font-medium text-sm"
+                        >
+                          {i + 1}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+                  </PaginationContent>
+
+                  <PaginationNext
+                    href="#"
+                    className="border border-black/10"
+                    onClick={() =>
+                      setPage((prev) =>
+                        prev + 1 <= totalPages ? prev + 1 : prev,
+                      )
+                    }
+                  />
+                </Pagination>
+              </>
+            )}
           </div>
         </div>
       </div>

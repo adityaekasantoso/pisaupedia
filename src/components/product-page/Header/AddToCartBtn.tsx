@@ -5,7 +5,7 @@ import { useAppDispatch } from "@/lib/hooks/redux";
 import { Product } from "@/types/product.types";
 
 type Props = {
-  data: Product & { quantity: number; stock: number };
+  data: Product & { quantity: number };
 };
 
 const AddToCartBtn = ({ data }: Props) => {
@@ -16,12 +16,17 @@ const AddToCartBtn = ({ data }: Props) => {
       addToCart({
         id: data.id,
         name: data.title,
-        srcUrl: data.srcUrl,
-        price: data.price,
-        discount: data.discount,
+        srcUrl: data.src_url,
+
+        price_idr: data.price_idr,
+        price_usd: data.price_usd,
+
         quantity: data.quantity,
         stock: data.stock,
-      }),
+
+        discount_percentage: data.discount_percentage,
+        discount_amount: data.discount_amount,
+      })
     );
   };
 
