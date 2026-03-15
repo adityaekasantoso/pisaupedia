@@ -94,18 +94,18 @@ const ProductCard = ({ data }: ProductCardProps) => {
 
         <div className="flex items-center flex-wrap justify-between mt-auto">
           <div className="flex items-center space-x-1 sm:space-x-2.5">
-            <span className="font-bold text-sm sm:text-xl xl:text-2xl">
+            <span className="font-bold text-lg">
               {formatPrice(finalPrice)}
             </span>
 
             {percentage > 0 && (
-              <span className="font-bold text-black/40 line-through text-xs sm:text-xl">
+              <span className="font-bold text-black/40 line-through text-lg">
                 {formatPrice(basePrice)}
               </span>
             )}
 
             {percentage > 0 && (
-              <span className="font-medium text-[8px] sm:text-[10px] xl:text-xs py-1 px-2 sm:py-1.5 sm:px-3 rounded-full bg-[#FF3333]/10 text-[#FF3333]">
+              <span className="font-medium text-lg xl:text-xs py-1 px-2 sm:py-1.5 sm:px-3 rounded-full bg-[#FF3333]/10 text-[#FF3333]">
                 -{percentage}%
               </span>
             )}

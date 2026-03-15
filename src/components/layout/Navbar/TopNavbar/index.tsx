@@ -29,7 +29,7 @@ const baseData: NavMenu = [
 ];
 
 const userData: NavMenu = [
-  { id: 2, type: "MenuItem", label: "My Orders", url: "/orders", children: [] },
+  { id: 2, type: "MenuItem", label: "Orders", url: "/orders", children: [] },
 ];
 
 const TopNavbar = () => {

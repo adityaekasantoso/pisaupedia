@@ -8,7 +8,6 @@ import * as motion from "framer-motion/client";
 const Header = () => {
   return (
     <header className="pt-10 md:pt-24 overflow-hidden relative">
-      {/* Background gradient luxury */}
       <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#1E0F0A] via-[#3A1F13] to-[#5A2B1B]" />
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_70%_50%,rgba(255,215,130,0.25),transparent_55%)]" />
       <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(255,240,180,0.15),transparent_60%)]" />
@@ -96,7 +95,6 @@ const Header = () => {
           transition={{ delay: 0.3, duration: 0.8 }}
           className="relative md:px-4 min-h-[500px] md:h-[390px] bg-cover bg-top xl:bg-[center_top_-1.6rem] bg-no-repeat bg-[url('/images/header-res-homepage.png')] md:bg-[url('/images/header-homepage.png')]"
         >
-          {/* Star animations */}
           <Image
             priority
             src="/icons/big-star.png"

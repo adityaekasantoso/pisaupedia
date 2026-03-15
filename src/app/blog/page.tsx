@@ -29,6 +29,7 @@ export default function BlogPage() {
         setBlogs(data);
       } catch (err) {
         console.error("Failed to fetch blogs:", err);
+        setBlogs([]);
       } finally {
         setLoading(false);
       }
@@ -38,7 +39,7 @@ export default function BlogPage() {
   }, []);
 
   const renderPreview = (content: string) => {
-    const text = content.replace(/<[^>]+>/g, ""); 
+    const text = content.replace(/<[^>]+>/g, "");
     return text.length > 150 ? text.slice(0, 150) + "..." : text;
   };
 
@@ -46,14 +47,13 @@ export default function BlogPage() {
     <main className="pb-20">
       <div className="max-w-frame mx-auto px-4 xl:px-0">
         <hr className="h-[1px] border-t-black/10 mb-5 sm:mb-6" />
-
         <BreadcrumbBlog />
 
         {loading ? (
-          <div className="text-center py-20 text-black/60">
-            Loading blogs...
+          <div className="flex justify-center items-center py-20">
+            <div className="w-10 h-10 border-2 border-black/10 border-t-black rounded-full animate-spin"></div>
           </div>
-        ) : blogs && blogs.length > 0 ? (
+        ) : blogs.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {blogs.map((blog) => (
               <div
@@ -61,10 +61,7 @@ export default function BlogPage() {
                 className="w-full p-5 md:px-6 flex flex-col space-y-2 rounded-[20px] border border-black/10 bg-white"
               >
                 <h1
-                  className={cn([
-                    integralCF.className,
-                    "text-xl text-black mb-4",
-                  ])}
+                  className={cn([integralCF.className, "text-xl text-black mb-4"])}
                 >
                   {blog.title}
                 </h1>

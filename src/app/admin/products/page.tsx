@@ -1,12 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import AdminSidebar from "@/components/AdminSidebar";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -27,7 +24,17 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 
-// ================= DATA DUMMY =================
+type Specification = {
+  "Blade Shape": string;
+  "Steel Type": string;
+  "Blade Length": string;
+  "Blade Height": string;
+  "Spine Thickness": string;
+  "Handle Length": string;
+  "Handle Type": string;
+  "Handle Materials": string;
+};
+
 interface Product {
   id: number;
   title: string;
@@ -35,22 +42,13 @@ interface Product {
   gallery: string[];
   price_idr: number;
   price_usd: number;
-  discount: number; // Hanya persentase
+  discount: number;
   rating: number;
   stock: number;
   category: string;
   desc: string;
   preOrder: { isPreOrder: boolean; duration: number };
-  specification: {
-    "Blade Shape": string;
-    "Steel Type": string;
-    "Blade Length": string;
-    "Blade Height": string;
-    "Spine Thickness": string;
-    "Handle Length": string;
-    "Handle Type": string;
-    "Handle Materials": string;
-  };
+  specification: Specification;
 }
 
 const initialProducts: Product[] = [
@@ -81,11 +79,12 @@ const initialProducts: Product[] = [
 ];
 
 export default function ProductsPage() {
+  const router = useRouter();
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [openModal, setOpenModal] = useState(false);
 
-  const initialSpec = {
+  const initialSpec: Specification = {
     "Blade Shape": "",
     "Steel Type": "",
     "Blade Length": "",
@@ -101,13 +100,22 @@ export default function ProductsPage() {
     price_idr: 0,
     price_usd: 0,
     stock: 0,
-    discount: 0, // Persentase
+    discount: 0,
     category: "",
     desc: "",
     preOrder_isPreOrder: false,
     preOrder_duration: 0,
     specification: { ...initialSpec },
   });
+
+  useEffect(() => {
+    const storedUser =
+      typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    if (!storedUser) return router.push("/");
+
+    const user = JSON.parse(storedUser);
+    if (user.role !== "admin") return router.push("/");
+  }, [router]);
 
   const handleOpenModal = (product?: Product) => {
     if (product) {
@@ -144,12 +152,14 @@ export default function ProductsPage() {
 
   const handleSave = () => {
     if (!form.title || form.price_idr <= 0 || form.stock < 0) {
-      alert("Isi semua field dengan benar");
+      alert("Please fill all required fields correctly");
       return;
     }
 
     const productData: Product = {
-      id: selectedProduct ? selectedProduct.id : Math.max(...products.map(p => p.id)) + 1,
+      id: selectedProduct
+        ? selectedProduct.id
+        : Math.max(...products.map((p) => p.id)) + 1,
       title: form.title,
       srcUrl: selectedProduct?.srcUrl || "/images/default.png",
       gallery: selectedProduct?.gallery || ["/images/default.png"],
@@ -168,17 +178,19 @@ export default function ProductsPage() {
     };
 
     if (selectedProduct) {
-      setProducts(prev => prev.map(p => p.id === selectedProduct.id ? productData : p));
+      setProducts((prev) =>
+        prev.map((p) => (p.id === selectedProduct.id ? productData : p)),
+      );
     } else {
-      setProducts(prev => [...prev, productData]);
+      setProducts((prev) => [...prev, productData]);
     }
 
     setOpenModal(false);
   };
 
   const handleDelete = (id: number) => {
-    if (confirm("Yakin ingin menghapus produk ini?")) {
-      setProducts(prev => prev.filter(p => p.id !== id));
+    if (confirm("Are you sure you want to delete this product?")) {
+      setProducts((prev) => prev.filter((p) => p.id !== id));
     }
   };
 
@@ -186,197 +198,231 @@ export default function ProductsPage() {
     <div className="flex h-screen">
       <AdminSidebar />
       <main className="flex-1 p-6 overflow-y-auto">
-        <Card className="shadow-none border">
-          {/* Header: tombol rata kanan */}
-          <CardHeader className="flex justify-end mb-4">
-            <Button onClick={() => handleOpenModal()} className="text-base px-4 py-2">
-              Tambah Produk
+        <Card className="shadow-none rounded-xl border border-gray-200 bg-white">
+          <CardHeader className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-0">
+            <CardTitle className="text-xl font-bold">
+              Product Management
+            </CardTitle>
+            <Button
+              onClick={() => handleOpenModal()}
+              className="rounded-full px-4 py-2"
+            >
+              Add Product
             </Button>
           </CardHeader>
 
-          <CardContent className="text-base">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Image</TableHead>
-                  <TableHead className="text-left">Title</TableHead>
-                  <TableHead>Price IDR</TableHead>
-                  <TableHead>Price USD</TableHead>
-                  <TableHead>Stock</TableHead>
-                  <TableHead>Discount</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {products.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell>
-                      <Image
-                        src={p.srcUrl}
-                        alt={p.title}
-                        width={40}
-                        height={40}
-                        className="rounded-md"
-                      />
-                    </TableCell>
-                    <TableCell className="text-left">{p.title}</TableCell>
-                    <TableCell>Rp{p.price_idr.toLocaleString("id-ID")}</TableCell>
-                    <TableCell>${p.price_usd.toLocaleString("en-US")}</TableCell>
-                    <TableCell>{p.stock}</TableCell>
-                    <TableCell>{p.discount > 0 ? `${p.discount}%` : "-"}</TableCell>
-                    <TableCell className="text-right flex justify-end gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleOpenModal(p)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDelete(p.id)}
-                      >
-                        Hapus
-                      </Button>
-                    </TableCell>
+          <CardContent className="space-y-4">
+            <div className="overflow-x-auto rounded-xl border border-black/10 p-4">
+              <Table className="min-w-full">
+                <TableHeader className="bg-gray-50">
+                  <TableRow>
+                    <TableHead>Image</TableHead>
+                    <TableHead className="text-left">Title</TableHead>
+                    <TableHead>Price IDR</TableHead>
+                    <TableHead>Price USD</TableHead>
+                    <TableHead>Stock</TableHead>
+                    <TableHead>Discount</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {products.map((p) => (
+                    <TableRow
+                      key={p.id}
+                      className="hover:bg-gray-50 even:bg-gray-50"
+                    >
+                      <TableCell>
+                        <Image
+                          src={p.srcUrl}
+                          alt={p.title}
+                          width={40}
+                          height={40}
+                          className="rounded-md"
+                        />
+                      </TableCell>
+                      <TableCell className="text-left font-medium">
+                        {p.title}
+                      </TableCell>
+                      <TableCell>
+                        Rp{p.price_idr.toLocaleString("id-ID")}
+                      </TableCell>
+                      <TableCell>
+                        ${p.price_usd.toLocaleString("en-US")}
+                      </TableCell>
+                      <TableCell>{p.stock}</TableCell>
+                      <TableCell>
+                        {p.discount > 0 ? `${p.discount}%` : "-"}
+                      </TableCell>
+                      <TableCell className="text-right flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="rounded-full"
+                          onClick={() => handleOpenModal(p)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          className="rounded-full"
+                          onClick={() => handleDelete(p.id)}
+                        >
+                          Delete
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Modal Add/Edit */}
         <Dialog open={openModal} onOpenChange={setOpenModal}>
-          <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto rounded-xl">
             <DialogHeader>
               <DialogTitle className="text-xl font-bold">
-                {selectedProduct ? "Edit Produk" : "Tambah Produk"}
+                {selectedProduct ? "Edit Product" : "Add Product"}
               </DialogTitle>
             </DialogHeader>
 
             <div className="flex flex-col space-y-4 mt-4 text-base">
-              {/* Title */}
               <div className="flex flex-col">
                 <label className="mb-1 font-medium text-base">Title</label>
                 <Input
-                  className="h-12 text-base"
-                  placeholder="Title"
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  className="rounded-full"
                 />
               </div>
 
-              {/* Category */}
               <div className="flex flex-col">
                 <label className="mb-1 font-medium text-base">Category</label>
                 <Input
-                  className="h-12 text-base"
-                  placeholder="Category"
                   value={form.category}
-                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, category: e.target.value })
+                  }
+                  className="rounded-full"
                 />
               </div>
 
-              {/* Price, Stock, Discount */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="flex flex-col">
-                  <label className="mb-1 font-medium text-base">Price IDR</label>
+                  <label className="mb-1 font-medium text-base">
+                    Price IDR
+                  </label>
                   <Input
                     type="number"
-                    className="h-12 text-base"
-                    placeholder="Price IDR"
                     value={form.price_idr}
-                    onChange={(e) => setForm({ ...form, price_idr: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setForm({ ...form, price_idr: Number(e.target.value) })
+                    }
+                    className="rounded-full"
                   />
                 </div>
                 <div className="flex flex-col">
-                  <label className="mb-1 font-medium text-base">Price USD</label>
+                  <label className="mb-1 font-medium text-base">
+                    Price USD
+                  </label>
                   <Input
                     type="number"
-                    className="h-12 text-base"
-                    placeholder="Price USD"
                     value={form.price_usd}
-                    onChange={(e) => setForm({ ...form, price_usd: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setForm({ ...form, price_usd: Number(e.target.value) })
+                    }
+                    className="rounded-full"
                   />
                 </div>
                 <div className="flex flex-col">
-                  <label className="mb-1 font-medium text-base">Discount (%)</label>
+                  <label className="mb-1 font-medium text-base">
+                    Discount (%)
+                  </label>
                   <Input
                     type="number"
-                    className="h-12 text-base"
-                    placeholder="Discount %"
                     value={form.discount}
-                    onChange={(e) => setForm({ ...form, discount: Number(e.target.value) })}
+                    onChange={(e) =>
+                      setForm({ ...form, discount: Number(e.target.value) })
+                    }
+                    className="rounded-full"
                   />
                 </div>
               </div>
 
-              {/* Stock */}
               <div className="flex flex-col">
                 <label className="mb-1 font-medium text-base">Stock</label>
                 <Input
                   type="number"
-                  className="h-12 text-base"
-                  placeholder="Stock"
                   value={form.stock}
-                  onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })}
+                  onChange={(e) =>
+                    setForm({ ...form, stock: Number(e.target.value) })
+                  }
+                  className="rounded-full"
                 />
               </div>
 
-              {/* Description */}
               <div className="flex flex-col">
-                <label className="mb-1 font-medium text-base">Description</label>
+                <label className="mb-1 font-medium text-base">
+                  Description
+                </label>
                 <Textarea
-                  className="h-20 text-base"
-                  placeholder="Description"
                   value={form.desc}
                   onChange={(e) => setForm({ ...form, desc: e.target.value })}
+                  className="rounded-xl"
                 />
               </div>
 
-              {/* PreOrder */}
               <div className="flex flex-col">
-                <label className="mb-1 font-medium text-base">PreOrder Duration (days)</label>
+                <label className="mb-1 font-medium text-base">
+                  PreOrder Duration (days)
+                </label>
                 <Input
                   type="number"
-                  className="h-12 text-base"
-                  placeholder="0 if not pre-order"
                   value={form.preOrder_duration}
-                  onChange={(e) => setForm({ ...form, preOrder_duration: Number(e.target.value) })}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      preOrder_duration: Number(e.target.value),
+                    })
+                  }
+                  className="rounded-full"
                 />
               </div>
 
-              {/* Specification */}
               <div className="grid grid-cols-3 gap-3">
                 {Object.keys(form.specification).map((key) => (
                   <div key={key} className="flex flex-col">
                     <label className="mb-1 font-medium text-base">{key}</label>
                     <Input
-                      className="h-12 text-base"
-                      placeholder={key}
-                      value={form.specification[key as keyof typeof initialSpec]}
+                      value={form.specification[key as keyof Specification]}
                       onChange={(e) =>
                         setForm({
                           ...form,
                           specification: {
                             ...form.specification,
-                            [key]: e.target.value,
+                            [key as keyof Specification]: e.target.value,
                           },
                         })
                       }
+                      className="rounded-full"
                     />
                   </div>
                 ))}
               </div>
             </div>
 
-            <DialogFooter className="mt-4 flex justify-end space-x-3">
-              <Button variant="outline" className="px-4 py-2 text-base" onClick={() => setOpenModal(false)}>
-                Batal
+            <DialogFooter className="mt-4 flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setOpenModal(false)}
+                className="rounded-full"
+              >
+                Cancel
               </Button>
-              <Button className="px-4 py-2 text-base" onClick={handleSave}>Simpan</Button>
+              <Button onClick={handleSave} className="rounded-full">
+                Save
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

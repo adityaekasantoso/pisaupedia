@@ -19,7 +19,7 @@ const BreadcrumbOrder = () => {
         </BreadcrumbItem>
         <BreadcrumbSeparator />
         <BreadcrumbItem>
-          <BreadcrumbPage>My Orders</BreadcrumbPage>
+          <BreadcrumbPage>Orders</BreadcrumbPage>
         </BreadcrumbItem>
       </BreadcrumbList>
     </Breadcrumb>

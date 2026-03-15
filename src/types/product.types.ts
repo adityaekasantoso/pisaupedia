@@ -18,5 +18,6 @@ export type Product = {
   description: string;
   pre_order_is: boolean;
   pre_order_duration: number;
-  specification?: Record<string, string>;
+  specification: Record<string, string>;
+  price?: number; 
 };

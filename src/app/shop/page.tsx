@@ -85,7 +85,7 @@ export default function ShopPage() {
 
             {loading ? (
               <div className="flex justify-center items-center py-20">
-                <div className="w-10 h-10 border-4 border-black/20 border-t-black rounded-full animate-spin"></div>
+                <div className="w-10 h-10 border-2 border-black/10 border-t-black rounded-full animate-spin"></div>
               </div>
             ) : (
               <div className="w-full grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-5">

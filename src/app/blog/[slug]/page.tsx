@@ -75,8 +75,8 @@ export default function BlogDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-black/60">
-        Loading blog...
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-black/10 border-t-black rounded-full animate-spin"></div>
       </div>
     );
   }

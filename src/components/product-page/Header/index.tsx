@@ -6,41 +6,28 @@ import { cn } from "@/lib/utils";
 import Rating from "@/components/ui/Rating";
 import AddToCardSection from "./AddToCardSection";
 import { useCurrency } from "@/context/CurrencyContext";
+import { Product } from "@/types/product.types";
 
-type Product = {
-  id: number;
-  title: string;
-  src_url: string;
-  price_idr: number;
-  price_usd: number;
-  discount_amount: number;
-  discount_percentage: number;
-  rating: number;
-  stock: number;
-  description: string;
-  pre_order_is: boolean;
-  pre_order_duration: number;
+type HeaderProps = {
+  data: Product;
 };
 
-const Header = ({ data }: { data: Product }) => {
+const Header = ({ data }: HeaderProps) => {
   const { currency } = useCurrency();
 
   const isOutOfStock = data.stock === 0;
 
-  const basePrice =
-    currency === "USD" ? data.price_usd : data.price_idr;
+  const basePrice = currency === "USD" ? data.price_usd : data.price_idr;
 
   const finalPrice =
     data.discount_percentage > 0
       ? Math.max(
           0,
-          Math.round(
-            basePrice - (basePrice * data.discount_percentage) / 100
-          )
+          Math.round(basePrice - (basePrice * data.discount_percentage) / 100),
         )
       : data.discount_amount > 0
-      ? Math.max(0, Math.round(basePrice - data.discount_amount))
-      : basePrice;
+        ? Math.max(0, Math.round(basePrice - data.discount_amount))
+        : basePrice;
 
   const formatPrice = (price: number) => {
     if (currency === "USD") {
@@ -79,7 +66,6 @@ const Header = ({ data }: { data: Product }) => {
               size={25}
               readonly
             />
-
             <span className="text-black text-xs sm:text-sm ml-[11px] sm:ml-[13px]">
               {data.rating.toFixed(1)}
               <span className="text-black/60">/5</span>
@@ -106,8 +92,7 @@ const Header = ({ data }: { data: Product }) => {
             {formatPrice(finalPrice)}
           </span>
 
-          {(data.discount_percentage > 0 ||
-            data.discount_amount > 0) && (
+          {(data.discount_percentage > 0 || data.discount_amount > 0) && (
             <span className="font-bold text-black/40 line-through text-2xl sm:text-[32px]">
               {formatPrice(basePrice)}
             </span>
@@ -119,12 +104,11 @@ const Header = ({ data }: { data: Product }) => {
             </span>
           )}
 
-          {data.discount_amount > 0 &&
-            data.discount_percentage === 0 && (
-              <span className="font-medium text-[10px] sm:text-xs py-1.5 px-3.5 rounded-full bg-[#FF3333]/10 text-[#FF3333]">
-                -{formatPrice(data.discount_amount)}
-              </span>
-            )}
+          {data.discount_amount > 0 && data.discount_percentage === 0 && (
+            <span className="font-medium text-[10px] sm:text-xs py-1.5 px-3.5 rounded-full bg-[#FF3333]/10 text-[#FF3333]">
+              -{formatPrice(data.discount_amount)}
+            </span>
+          )}
         </div>
 
         <p className="text-sm sm:text-base text-black/60 mb-5">
@@ -133,12 +117,7 @@ const Header = ({ data }: { data: Product }) => {
 
         <hr className="hidden md:block h-[1px] border-t-black/10 my-5" />
 
-        <AddToCardSection
-          data={{
-            ...data,
-            price: basePrice,
-          }}
-        />
+        <AddToCardSection data={data} />
       </div>
     </div>
   );

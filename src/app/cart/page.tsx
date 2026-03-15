@@ -19,11 +19,13 @@ export default function CartPage() {
   const { user } = useAuth();
   const dispatch = useAppDispatch();
   const { cart, totalPrice, adjustedTotalPrice } = useAppSelector(
-    (state: RootState) => state.carts
+    (state: RootState) => state.carts,
   );
 
   const { currency } = useCurrency();
-  const [shippingType, setShippingType] = useState<"domestic" | "international">("domestic");
+  const [shippingType, setShippingType] = useState<
+    "domestic" | "international"
+  >("domestic");
   const [loadingCheckout, setLoadingCheckout] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
   const [address, setAddress] = useState({
@@ -54,7 +56,9 @@ export default function CartPage() {
   };
 
   const getItemPrice = (item: any) => {
-    return currency === "USD" ? Number(item.price_usd ?? 0) : Number(item.price_idr ?? 0);
+    return currency === "USD"
+      ? Number(item.price_usd ?? 0)
+      : Number(item.price_idr ?? 0);
   };
 
   const handleCheckout = async () => {
@@ -90,7 +94,7 @@ export default function CartPage() {
         const message = `
           Hello Admin,
 
-          I would like to place an INTERNATIONAL order.
+          I would like to place an International order.
 
           Shipping Address:
           Name: ${address.name}
@@ -119,7 +123,8 @@ export default function CartPage() {
     }
   };
 
-  const inputClass = "w-full border p-3 rounded-full focus:outline-none focus:ring-0";
+  const inputClass =
+    "w-full border p-3 rounded-full focus:outline-none focus:ring-0";
 
   if (redirecting) {
     return (
@@ -141,7 +146,9 @@ export default function CartPage() {
                 {cart.items.map((product, idx, arr) => (
                   <React.Fragment key={product.id}>
                     <ProductCard data={product} />
-                    {arr.length - 1 !== idx && <hr className="border-t-black/10" />}
+                    {arr.length - 1 !== idx && (
+                      <hr className="border-t-black/10" />
+                    )}
                   </React.Fragment>
                 ))}
               </div>
@@ -160,7 +167,9 @@ export default function CartPage() {
                     <button
                       onClick={() => setShippingType("international")}
                       className={`flex-1 py-3 rounded-full border ${
-                        shippingType === "international" ? "bg-black text-white" : ""
+                        shippingType === "international"
+                          ? "bg-black text-white"
+                          : ""
                       }`}
                     >
                       International
@@ -173,39 +182,57 @@ export default function CartPage() {
                     placeholder="Full Name"
                     className={inputClass}
                     value={address.name}
-                    onChange={(e) => setAddress({ ...address, name: e.target.value })}
+                    onChange={(e) =>
+                      setAddress({ ...address, name: e.target.value })
+                    }
                   />
                   <input
                     placeholder="Phone"
                     className={inputClass}
                     value={address.phone}
-                    onChange={(e) => setAddress({ ...address, phone: e.target.value })}
+                    onChange={(e) =>
+                      setAddress({ ...address, phone: e.target.value })
+                    }
                   />
                   <textarea
                     placeholder="Address"
                     className="w-full border p-3 rounded-xl focus:outline-none focus:ring-0 h-28 resize-none"
                     value={address.addressText}
-                    onChange={(e) => setAddress({ ...address, addressText: e.target.value })}
+                    onChange={(e) =>
+                      setAddress({ ...address, addressText: e.target.value })
+                    }
                   />
                   <input
                     placeholder="Postal Code"
                     className={inputClass}
                     value={address.postalCode}
-                    onChange={(e) => setAddress({ ...address, postalCode: e.target.value })}
+                    onChange={(e) =>
+                      setAddress({ ...address, postalCode: e.target.value })
+                    }
                   />
                   {shippingType === "international" && (
                     <input
                       placeholder="Country"
                       className={inputClass}
                       value={address.country}
-                      onChange={(e) => setAddress({ ...address, country: e.target.value })}
+                      onChange={(e) =>
+                        setAddress({ ...address, country: e.target.value })
+                      }
                     />
                   )}
                 </div>
                 <div className="p-4 sm:p-5 border rounded-[20px] space-y-2">
                   <h6 className="font-bold text-lg">Payment Method</h6>
-                  {shippingType === "domestic" && <p className="text-sm text-gray-600">Payment Gateway: Midtrans</p>}
-                  {shippingType === "international" && <p className="text-sm text-gray-600">Payment Gateway: PayPal</p>}
+                  {shippingType === "domestic" && (
+                    <p className="text-sm text-gray-600">
+                      Payment Gateway: Midtrans
+                    </p>
+                  )}
+                  {shippingType === "international" && (
+                    <p className="text-sm text-gray-600">
+                      Payment Gateway: PayPal
+                    </p>
+                  )}
                 </div>
                 <div className="p-4 sm:p-5 border rounded-[20px] space-y-5">
                   <h6 className="font-bold text-xl">Order Summary</h6>

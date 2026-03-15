@@ -21,6 +21,15 @@ const AddToCardSection = ({ data }: Props) => {
   );
   const { currency } = useCurrency();
 
+  const basePrice = currency === "USD" ? data.price_usd : data.price_idr;
+
+  const finalPrice =
+    data.discount_percentage > 0
+      ? Math.max(0, Math.round(basePrice - (basePrice * data.discount_percentage) / 100))
+      : data.discount_amount > 0
+      ? Math.max(0, Math.round(basePrice - data.discount_amount))
+      : basePrice;
+
   const existingCartQty = useMemo(() => {
     const item = cartItems.find((item) => item.id === data.id);
     return item ? item.quantity : 1;
@@ -59,7 +68,7 @@ const AddToCardSection = ({ data }: Props) => {
             data={{
               ...data,
               quantity,
-              stock: data.stock,
+              price: finalPrice, // optional, kalau AddToCartBtn butuh harga final
             }}
           />
         </>

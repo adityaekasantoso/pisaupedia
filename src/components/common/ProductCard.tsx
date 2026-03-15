@@ -88,14 +88,12 @@ const ProductCard = ({ data }: ProductCardProps) => {
           : ""
       }`}
     >
-      {/* PRE ORDER */}
       {data.pre_order_is && (
         <div className="absolute top-2 left-2 bg-orange-100 text-orange-500 font-medium px-2 py-1 text-xs rounded-full z-10">
           Pre-Order ({data.pre_order_duration ?? 0} days)
         </div>
       )}
 
-      {/* IMAGE */}
       <div className="bg-[#F0EEED] rounded-[13px] lg:rounded-[20px] w-full lg:max-w-[295px] aspect-square mb-2.5 xl:mb-4 overflow-hidden">
         <Image
           src={imageSrc}
@@ -107,12 +105,10 @@ const ProductCard = ({ data }: ProductCardProps) => {
         />
       </div>
 
-      {/* TITLE */}
       <strong className="text-black xl:text-l">
         {(data.title ?? "PRODUCT").toUpperCase()}
       </strong>
 
-      {/* RATING */}
       <div className="flex items-center justify-between w-full mb-1 xl:mb-2">
         <div className="flex items-end">
           <Rating
@@ -130,7 +126,6 @@ const ProductCard = ({ data }: ProductCardProps) => {
         </div>
       </div>
 
-      {/* PRICE */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 xl:gap-2.5">
         <div className="flex items-center gap-2">
           <span className="font-bold text-black text-sm sm:text-base md:text-lg xl:text-xl">

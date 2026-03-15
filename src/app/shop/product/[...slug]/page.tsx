@@ -46,7 +46,7 @@ export default function ProductPage() {
   if (loading) {
     return (
       <main className="min-h-[70vh] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-black/20 border-t-black rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-2 border-black/10 border-t-black rounded-full animate-spin"></div>
       </main>
     );
   }
