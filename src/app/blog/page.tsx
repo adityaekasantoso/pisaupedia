@@ -24,7 +24,7 @@ export default function BlogPage() {
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
-        const res = await fetch("http://localhost:3001/api/blogs");
+        const res = await fetch("https://api-pisaupedia.vercel.app/api/blogs");
         const data: Blog[] = await res.json();
         setBlogs(data);
       } catch (err) {

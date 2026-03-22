@@ -22,7 +22,7 @@ export default function ProductPage() {
     const fetchProduct = async () => {
       try {
         setLoading(true);
-        const res = await fetch("http://localhost:3001/api/products");
+        const res = await fetch("https://api-pisaupedia.vercel.app/api/products");
         const allProducts: Product[] = await res.json();
 
         const prod = allProducts.find((p: Product) => p.id === Number(slug));

@@ -35,7 +35,7 @@ export default function ShopPage() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const res = await fetch("http://localhost:3001/api/products");
+        const res = await fetch("https://api-pisaupedia.vercel.app/api/products");
         const data: Product[] = await res.json();
         setAllProducts(data);
       } catch {

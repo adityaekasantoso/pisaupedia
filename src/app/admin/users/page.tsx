@@ -66,7 +66,7 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     if (!token) return;
     try {
-      const res = await fetch("http://localhost:3001/api/users", {
+      const res = await fetch("https://api-pisaupedia.vercel.app/api/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Failed to fetch users");
@@ -105,8 +105,8 @@ export default function UsersPage() {
     try {
       const res = await fetch(
         selectedUser
-          ? `http://localhost:3001/api/users/${selectedUser.id}`
-          : "http://localhost:3001/api/register",
+          ? `https://api-pisaupedia.vercel.app/api/users/${selectedUser.id}`
+          : "https://api-pisaupedia.vercel.app/api/register",
         {
           method: selectedUser ? "PUT" : "POST",
           headers: {
@@ -134,7 +134,7 @@ export default function UsersPage() {
     if (!confirm("Are you sure you want to delete this user?")) return;
 
     try {
-      const res = await fetch(`http://localhost:3001/api/users/${id}`, {
+      const res = await fetch(`https://api-pisaupedia.vercel.app/api/users/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import AdminSidebar from "@/components/AdminSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,106 +31,101 @@ interface Blog {
   content: string;
 }
 
+const emptyForm: Blog = {
+  title: "",
+  slug: "",
+  author: "",
+  content: "",
+};
+
 export default function AdminBlogPage() {
   const router = useRouter();
+
   const [blogs, setBlogs] = useState<Blog[]>([]);
-  const [openModal, setOpenModal] = useState(false);
+  const [form, setForm] = useState<Blog>(emptyForm);
   const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null);
-  const [form, setForm] = useState<Blog>({
-    title: "",
-    slug: "",
-    author: "",
-    content: "",
-  });
+  const [openModal, setOpenModal] = useState(false);
+
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   useEffect(() => {
-    const storedUser =
-      typeof window !== "undefined" ? localStorage.getItem("user") : null;
-    if (!storedUser) return router.push("/");
+    const user =
+      typeof window !== "undefined"
+        ? JSON.parse(localStorage.getItem("user") || "null")
+        : null;
 
-    const user = JSON.parse(storedUser);
-    if (user.role !== "admin") return router.push("/");
+    if (!user || user.role !== "admin") {
+      router.push("/");
+      return;
+    }
 
     fetchBlogs();
   }, [router]);
 
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : "";
-
   const fetchBlogs = async () => {
-    try {
-      const res = await fetch("http://localhost:3001/api/blogs", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      setBlogs(data);
-    } catch (err) {
-      console.error(err);
-    }
+    const res = await fetch("https://api-pisaupedia.vercel.app/api/blogs", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await res.json();
+    setBlogs(data);
   };
 
-  const handleOpenModal = (blog?: Blog) => {
-    setSelectedBlog(blog || null);
-    setForm(blog || { title: "", slug: "", author: "", content: "" });
+  const openCreateModal = () => {
+    setSelectedBlog(null);
+    setForm(emptyForm);
     setOpenModal(true);
   };
 
+  const openEditModal = (blog: Blog) => {
+    setSelectedBlog(blog);
+    setForm(blog);
+    setOpenModal(true);
+  };
+
+  const handleChange = (key: keyof Blog, value: string) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
   const handleSave = async () => {
-    try {
-      const url = selectedBlog
-        ? `http://localhost:3001/api/blogs/${selectedBlog.id}`
-        : "http://localhost:3001/api/blogs";
+    const url = selectedBlog
+      ? `https://api-pisaupedia.vercel.app/api/blogs/${selectedBlog.id}`
+      : "https://api-pisaupedia.vercel.app/api/blogs";
 
-      const res = await fetch(url, {
-        method: selectedBlog ? "PUT" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(form),
-      });
+    await fetch(url, {
+      method: selectedBlog ? "PUT" : "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(form),
+    });
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to save blog");
-      }
-
-      setOpenModal(false);
-      fetchBlogs();
-    } catch (err: any) {
-      alert("Failed to save blog: " + err.message);
-    }
+    setOpenModal(false);
+    fetchBlogs();
   };
 
   const handleDelete = async (id?: number) => {
-    if (!id || !confirm("Are you sure you want to delete this blog?")) return;
+    if (!id) return;
 
-    try {
-      const res = await fetch(`http://localhost:3001/api/blogs/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "Failed to delete blog");
-      }
-      fetchBlogs();
-    } catch (err: any) {
-      alert("Failed to delete blog: " + err.message);
-    }
+    await fetch(`https://api-pisaupedia.vercel.app/api/blogs/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    fetchBlogs();
   };
 
   return (
     <div className="flex h-screen">
       <AdminSidebar />
+
       <main className="flex-1 p-6 overflow-y-auto">
         <Card className="shadow-none rounded-lg border border-gray-200 bg-white">
           <CardHeader className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-0">
             <CardTitle className="text-xl font-bold">Blog Management</CardTitle>
-            <Button
-              onClick={() => handleOpenModal()}
-              className="rounded-full px-4 py-2"
-            >
+            <Button onClick={openCreateModal} className="rounded-full px-4 py-2">
               Add Blog
             </Button>
           </CardHeader>
@@ -145,6 +140,7 @@ export default function AdminBlogPage() {
                     <TableHead className="text-right">Action</TableHead>
                   </TableRow>
                 </TableHeader>
+
                 <TableBody>
                   {blogs.length === 0 ? (
                     <TableRow>
@@ -156,26 +152,30 @@ export default function AdminBlogPage() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    blogs.map((b) => (
+                    blogs.map((blog) => (
                       <TableRow
-                        key={b.id}
+                        key={blog.id}
                         className="hover:bg-gray-50 even:bg-gray-50"
                       >
-                        <TableCell className="font-medium">{b.title}</TableCell>
-                        <TableCell>{b.author}</TableCell>
+                        <TableCell className="font-medium">
+                          {blog.title}
+                        </TableCell>
+                        <TableCell>{blog.author}</TableCell>
+
                         <TableCell className="flex justify-end gap-2">
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => handleOpenModal(b)}
+                            onClick={() => openEditModal(blog)}
                             className="rounded-full"
                           >
                             Edit
                           </Button>
+
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => handleDelete(b.id)}
+                            onClick={() => handleDelete(blog.id)}
                             className="rounded-full"
                           >
                             Delete
@@ -199,47 +199,33 @@ export default function AdminBlogPage() {
             </DialogHeader>
 
             <div className="flex flex-col space-y-4 mt-4">
-              <div className="flex flex-col">
-                <label className="mb-1 font-medium">Title</label>
-                <Input
-                  value={form.title}
-                  onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  placeholder="Title"
-                  className="rounded-full"
-                />
-              </div>
+              <Input
+                placeholder="Title"
+                value={form.title}
+                onChange={(e) => handleChange("title", e.target.value)}
+                className="rounded-full"
+              />
 
-              <div className="flex flex-col">
-                <label className="mb-1 font-medium">Slug</label>
-                <Input
-                  value={form.slug}
-                  onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                  placeholder="Slug"
-                  className="rounded-full"
-                />
-              </div>
+              <Input
+                placeholder="Slug"
+                value={form.slug}
+                onChange={(e) => handleChange("slug", e.target.value)}
+                className="rounded-full"
+              />
 
-              <div className="flex flex-col">
-                <label className="mb-1 font-medium">Author</label>
-                <Input
-                  value={form.author}
-                  onChange={(e) => setForm({ ...form, author: e.target.value })}
-                  placeholder="Author"
-                  className="rounded-full"
-                />
-              </div>
+              <Input
+                placeholder="Author"
+                value={form.author}
+                onChange={(e) => handleChange("author", e.target.value)}
+                className="rounded-full"
+              />
 
-              <div className="flex flex-col">
-                <label className="mb-1 font-medium">Content</label>
-                <Textarea
-                  value={form.content}
-                  onChange={(e) =>
-                    setForm({ ...form, content: e.target.value })
-                  }
-                  placeholder="Content (HTML allowed)"
-                  className="h-40 rounded-xl"
-                />
-              </div>
+              <Textarea
+                placeholder="Content (HTML allowed)"
+                value={form.content}
+                onChange={(e) => handleChange("content", e.target.value)}
+                className="h-40 rounded-xl"
+              />
             </div>
 
             <DialogFooter className="mt-4 flex justify-end gap-3">
@@ -250,6 +236,7 @@ export default function AdminBlogPage() {
               >
                 Cancel
               </Button>
+
               <Button onClick={handleSave} className="rounded-full">
                 Save
               </Button>

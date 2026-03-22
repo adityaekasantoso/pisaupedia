@@ -10,7 +10,7 @@ import { Review } from "@/types/review.types";
 export default function Home() {
   const [newArrivals, setNewArrivals] = useState<Product[]>([]);
   const [topSelling, setTopSelling] = useState<Product[]>([]);
-  const [reviews, setReviews] = useState<Review[]>([
+  const [reviews] = useState<Review[]>([
     {
       id: 1,
       user: "Andy S.",
@@ -57,20 +57,19 @@ export default function Home() {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      try {
-        const res = await fetch("http://localhost:3001/api/products");
-        const data: Product[] = await res.json();
+      const res = await fetch("https://api-pisaupedia.vercel.app/api/products");
+      const data: Product[] = await res.json();
 
-        // New arrivals: sorting by id descending
-        const sortedByIdDesc = [...data].sort((a, b) => b.id - a.id);
-        setNewArrivals(sortedByIdDesc.slice(0, 4));
+      const newProducts = [...data]
+        .sort((a, b) => b.id - a.id)
+        .slice(0, 4);
 
-        // Top selling: sorting by rating descending
-        const sortedByRating = [...data].sort((a, b) => b.rating - a.rating);
-        setTopSelling(sortedByRating.slice(0, 4));
-      } catch (error) {
-        console.error("Failed to fetch products:", error);
-      }
+      const topProducts = [...data]
+        .sort((a, b) => b.rating - a.rating)
+        .slice(0, 4);
+
+      setNewArrivals(newProducts);
+      setTopSelling(topProducts);
     };
 
     fetchProducts();
@@ -79,6 +78,7 @@ export default function Home() {
   return (
     <>
       <Header />
+
       <main className="my-[50px] sm:my-[72px]">
         <ProductListSec
           title="NEW PRODUCT"
@@ -95,6 +95,7 @@ export default function Home() {
           data={topSelling}
           viewAllLink="/shop#top-selling"
         />
+
         <div className="max-w-frame mx-auto px-4 xl:px-0">
           <hr className="h-[1px] border-t-black/10 my-10 sm:my-16" />
         </div>
