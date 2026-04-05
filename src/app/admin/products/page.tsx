@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import Image from "next/image";
 import {
   Dialog,
@@ -23,66 +24,51 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Specification = {
   "Blade Shape": string;
   "Steel Type": string;
   "Blade Length": string;
   "Blade Height": string;
-  "Spine Thickness": string;
-  "Handle Length": string;
+  "Spine Thickness"?: string;
+  "Handle Length"?: string;
   "Handle Type": string;
   "Handle Materials": string;
 };
 
-interface Product {
+type Product = {
   id: number;
   title: string;
-  srcUrl: string;
+  src_url: string;
   gallery: string[];
   price_idr: number;
   price_usd: number;
-  discount: number;
+  discount_amount: number;
+  discount_percentage: number;
   rating: number;
   stock: number;
   category: string;
-  desc: string;
-  preOrder: { isPreOrder: boolean; duration: number };
+  description: string;
+  pre_order_is: boolean;
+  pre_order_duration: number;
   specification: Specification;
-}
-
-const initialProducts: Product[] = [
-  {
-    id: 1,
-    title: "Bunka N695 Stainless Steel 165mm",
-    srcUrl: "/images/pic1.png",
-    gallery: ["/images/pic1.png"],
-    price_idr: 1000000,
-    price_usd: 65,
-    discount: 1,
-    rating: 4.8,
-    stock: 10,
-    category: "chef-knives",
-    desc: "Pisau Bunka premium berbahan N695 stainless steel dengan ketajaman tinggi dan presisi maksimal untuk kebutuhan dapur profesional.",
-    preOrder: { isPreOrder: false, duration: 0 },
-    specification: {
-      "Blade Shape": "",
-      "Steel Type": "",
-      "Blade Length": "",
-      "Blade Height": "",
-      "Spine Thickness": "",
-      "Handle Length": "",
-      "Handle Type": "",
-      "Handle Materials": "",
-    },
-  },
-];
+};
 
 export default function ProductsPage() {
   const router = useRouter();
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  const [products, setProducts] = useState<Product[]>([]);
   const [openModal, setOpenModal] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState("");
+  const [editId, setEditId] = useState<number | null>(null);
 
   const initialSpec: Specification = {
     "Blade Shape": "",
@@ -97,175 +83,230 @@ export default function ProductsPage() {
 
   const [form, setForm] = useState({
     title: "",
+    category: "",
+    description: "",
     price_idr: 0,
     price_usd: 0,
+    discount_amount: 0,
+    discount_percentage: 0,
+    rating: 0,
     stock: 0,
-    discount: 0,
-    category: "",
-    desc: "",
-    preOrder_isPreOrder: false,
-    preOrder_duration: 0,
+    pre_order_is: false,
+    pre_order_duration: 0,
     specification: { ...initialSpec },
   });
 
   useEffect(() => {
-    const storedUser =
-      typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    const storedUser = localStorage.getItem("user");
     if (!storedUser) return router.push("/");
 
     const user = JSON.parse(storedUser);
     if (user.role !== "admin") return router.push("/");
+
+    fetchProducts();
   }, [router]);
 
-  const handleOpenModal = (product?: Product) => {
-    if (product) {
-      setSelectedProduct(product);
-      setForm({
-        title: product.title,
-        price_idr: product.price_idr,
-        price_usd: product.price_usd,
-        stock: product.stock,
-        discount: product.discount,
-        category: product.category,
-        desc: product.desc,
-        preOrder_isPreOrder: product.preOrder.isPreOrder,
-        preOrder_duration: product.preOrder.duration,
-        specification: product.specification,
+  const fetchProducts = async () => {
+    const res = await fetch("https://api-pisaupedia.vercel.app/api/products");
+    const data = await res.json();
+    setProducts(data);
+  };
+
+  const resetForm = () => {
+    setForm({
+      title: "",
+      category: "",
+      description: "",
+      price_idr: 0,
+      price_usd: 0,
+      discount_amount: 0,
+      discount_percentage: 0,
+      rating: 0,
+      stock: 0,
+      pre_order_is: false,
+      pre_order_duration: 0,
+      specification: { ...initialSpec },
+    });
+    setImageFile(null);
+    setPreview("");
+    setEditId(null);
+  };
+
+  const handleUploadImage = async () => {
+    if (!imageFile) return "";
+
+    const formData = new FormData();
+    formData.append("file", imageFile);
+    formData.append("title", form.title);
+
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!res.ok) return "";
+
+    const data = await res.json();
+    return data.url;
+  };
+
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return alert("Token tidak ada");
+
+      let imageUrl = "";
+
+      // 🔥 kalau upload gambar baru
+      if (imageFile) {
+        imageUrl = await handleUploadImage();
+      }
+
+      const body = {
+        title: form.title,
+        src_url: imageUrl || preview, // 🔥 pakai lama kalau tidak upload
+        gallery: [imageUrl || preview],
+
+        price_idr: Number(form.price_idr),
+        price_usd: Number(form.price_usd),
+        discount_amount: Number(form.discount_amount),
+        discount_percentage: Number(form.discount_percentage),
+        rating: Number(form.rating),
+        stock: Number(form.stock),
+
+        category: form.category,
+        description: form.description,
+
+        pre_order_is: form.pre_order_is,
+        pre_order_duration: Number(form.pre_order_duration),
+
+        specification: {
+          "Blade Shape": form.specification["Blade Shape"] || "-",
+          "Steel Type": form.specification["Steel Type"] || "-",
+          "Blade Length": form.specification["Blade Length"] || "-",
+          "Blade Height": form.specification["Blade Height"] || "-",
+          "Handle Type": form.specification["Handle Type"] || "-",
+          "Handle Materials": form.specification["Handle Materials"] || "-",
+        },
+      };
+
+      const url = editId
+        ? `https://api-pisaupedia.vercel.app/api/products/${editId}`
+        : `https://api-pisaupedia.vercel.app/api/products`;
+
+      const method = editId ? "PUT" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
       });
-    } else {
-      setSelectedProduct(null);
-      setForm({
-        title: "",
-        price_idr: 0,
-        price_usd: 0,
-        stock: 0,
-        discount: 0,
-        category: "",
-        desc: "",
-        preOrder_isPreOrder: false,
-        preOrder_duration: 0,
-        specification: { ...initialSpec },
-      });
+
+      if (!res.ok) return alert("Gagal save");
+
+      setOpenModal(false);
+      resetForm();
+      fetchProducts();
+    } catch (err) {
+      alert("Error");
     }
+  };
+
+  const handleEdit = (p: Product) => {
+    setEditId(p.id);
+
+    setForm({
+      title: p.title,
+      category: p.category,
+      description: p.description,
+      price_idr: p.price_idr,
+      price_usd: p.price_usd,
+      discount_amount: p.discount_amount,
+      discount_percentage: p.discount_percentage,
+      rating: p.rating,
+      stock: p.stock,
+      pre_order_is: p.pre_order_is,
+      pre_order_duration: p.pre_order_duration,
+      specification: {
+        ...initialSpec,
+        ...p.specification,
+      },
+    });
+
+    setPreview(p.src_url);
     setOpenModal(true);
   };
 
-  const handleSave = () => {
-    if (!form.title || form.price_idr <= 0 || form.stock < 0) {
-      alert("Please fill all required fields correctly");
-      return;
-    }
+  const handleDelete = async (id: number) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
-    const productData: Product = {
-      id: selectedProduct
-        ? selectedProduct.id
-        : Math.max(...products.map((p) => p.id)) + 1,
-      title: form.title,
-      srcUrl: selectedProduct?.srcUrl || "/images/default.png",
-      gallery: selectedProduct?.gallery || ["/images/default.png"],
-      price_idr: form.price_idr,
-      price_usd: form.price_usd,
-      stock: form.stock,
-      discount: form.discount,
-      rating: selectedProduct?.rating || 0,
-      category: form.category,
-      desc: form.desc,
-      preOrder: {
-        isPreOrder: form.preOrder_isPreOrder,
-        duration: form.preOrder_duration,
+    if (!confirm("Yakin hapus?")) return;
+
+    await fetch(`https://api-pisaupedia.vercel.app/api/products/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
       },
-      specification: form.specification,
-    };
+    });
 
-    if (selectedProduct) {
-      setProducts((prev) =>
-        prev.map((p) => (p.id === selectedProduct.id ? productData : p)),
-      );
-    } else {
-      setProducts((prev) => [...prev, productData]);
-    }
-
-    setOpenModal(false);
-  };
-
-  const handleDelete = (id: number) => {
-    if (confirm("Are you sure you want to delete this product?")) {
-      setProducts((prev) => prev.filter((p) => p.id !== id));
-    }
+    fetchProducts();
   };
 
   return (
     <div className="flex h-screen">
       <AdminSidebar />
-      <main className="flex-1 p-6 overflow-y-auto">
-        <Card className="shadow-none rounded-xl border border-gray-200 bg-white">
-          <CardHeader className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-0">
+
+      <main className="flex-1 p-6">
+        <Card>
+          <CardHeader className="flex justify-between flex-row">
             <CardTitle className="text-xl font-bold">
               Product Management
             </CardTitle>
             <Button
-              onClick={() => handleOpenModal()}
-              className="rounded-full px-4 py-2"
+              onClick={() => {
+                resetForm();
+                setOpenModal(true);
+              }}
             >
               Add Product
             </Button>
           </CardHeader>
 
-          <CardContent className="space-y-4">
-            <div className="overflow-x-auto rounded-xl border border-black/10 p-4">
-              <Table className="min-w-full">
-                <TableHeader className="bg-gray-50">
+          <CardContent>
+            <div className="overflow-x-auto rounded-xl border p-4">
+              <Table>
+                <TableHeader>
                   <TableRow>
                     <TableHead>Image</TableHead>
-                    <TableHead className="text-left">Title</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Category</TableHead>
                     <TableHead>Price IDR</TableHead>
                     <TableHead>Price USD</TableHead>
+
                     <TableHead>Stock</TableHead>
-                    <TableHead>Discount</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
+                    <TableHead>Action</TableHead>
                   </TableRow>
                 </TableHeader>
+
                 <TableBody>
                   {products.map((p) => (
-                    <TableRow
-                      key={p.id}
-                      className="hover:bg-gray-50 even:bg-gray-50"
-                    >
+                    <TableRow key={p.id}>
                       <TableCell>
-                        <Image
-                          src={p.srcUrl}
-                          alt={p.title}
-                          width={40}
-                          height={40}
-                          className="rounded-md"
-                        />
+                        <Image src={p.src_url} alt="" width={40} height={40} />
                       </TableCell>
-                      <TableCell className="text-left font-medium">
-                        {p.title}
-                      </TableCell>
-                      <TableCell>
-                        Rp{p.price_idr.toLocaleString("id-ID")}
-                      </TableCell>
-                      <TableCell>
-                        ${p.price_usd.toLocaleString("en-US")}
-                      </TableCell>
+                      <TableCell>{p.title}</TableCell>
+                      <TableCell>{p.category}</TableCell>
+                      <TableCell>Rp {p.price_idr}</TableCell>
+                      <TableCell>${p.price_usd}</TableCell>
                       <TableCell>{p.stock}</TableCell>
-                      <TableCell>
-                        {p.discount > 0 ? `${p.discount}%` : "-"}
-                      </TableCell>
-                      <TableCell className="text-right flex justify-end gap-2">
+                      <TableCell className="flex gap-2">
+                        <Button onClick={() => handleEdit(p)}>Edit</Button>
                         <Button
-                          size="sm"
-                          variant="outline"
-                          className="rounded-full"
-                          onClick={() => handleOpenModal(p)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
                           variant="destructive"
-                          className="rounded-full"
                           onClick={() => handleDelete(p.id)}
                         >
                           Delete
@@ -280,120 +321,193 @@ export default function ProductsPage() {
         </Card>
 
         <Dialog open={openModal} onOpenChange={setOpenModal}>
-          <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto rounded-xl">
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold">
-                {selectedProduct ? "Edit Product" : "Add Product"}
+              <DialogTitle>
+                {editId ? "Edit Product" : "Create Product"}
               </DialogTitle>
             </DialogHeader>
 
-            <div className="flex flex-col space-y-4 mt-4 text-base">
-              <div className="flex flex-col">
-                <label className="mb-1 font-medium text-base">Title</label>
+            <div className="space-y-4">
+              {/* TITLE */}
+              <div>
+                <Label>Title</Label>
                 <Input
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
-                  className="rounded-full"
                 />
               </div>
 
-              <div className="flex flex-col">
-                <label className="mb-1 font-medium text-base">Category</label>
-                <Input
+              {/* CATEGORY */}
+              <div>
+                <Label>Category</Label>
+                <Select
                   value={form.category}
-                  onChange={(e) =>
-                    setForm({ ...form, category: e.target.value })
+                  onValueChange={(value) =>
+                    setForm({ ...form, category: value })
                   }
-                  className="rounded-full"
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    <SelectItem value="chef-knives">Chef Knives</SelectItem>
+                    <SelectItem value="utility-knives">
+                      Utility Knives
+                    </SelectItem>
+                    <SelectItem value="paring-knives">Paring Knives</SelectItem>
+                    <SelectItem value="bread-knives">Bread Knives</SelectItem>
+                    <SelectItem value="specialty-knives">
+                      Specialty Knives
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <div className="flex flex-col">
-                  <label className="mb-1 font-medium text-base">
-                    Price IDR
-                  </label>
+              {/* IMAGE */}
+              <div>
+                <Label>Image</Label>
+                <Input
+                  type="file"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setImageFile(file);
+                    setPreview(URL.createObjectURL(file));
+                  }}
+                />
+                {preview && (
+                  <Image src={preview} alt="" width={120} height={120} />
+                )}
+              </div>
+
+              {/* PRICE */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Price IDR</Label>
                   <Input
                     type="number"
                     value={form.price_idr}
                     onChange={(e) =>
                       setForm({ ...form, price_idr: Number(e.target.value) })
                     }
-                    className="rounded-full"
                   />
                 </div>
-                <div className="flex flex-col">
-                  <label className="mb-1 font-medium text-base">
-                    Price USD
-                  </label>
+
+                <div>
+                  <Label>Price USD</Label>
                   <Input
                     type="number"
                     value={form.price_usd}
                     onChange={(e) =>
                       setForm({ ...form, price_usd: Number(e.target.value) })
                     }
-                    className="rounded-full"
                   />
                 </div>
-                <div className="flex flex-col">
-                  <label className="mb-1 font-medium text-base">
-                    Discount (%)
-                  </label>
+              </div>
+
+              {/* DISCOUNT */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Discount Amount</Label>
                   <Input
                     type="number"
-                    value={form.discount}
+                    value={form.discount_amount}
                     onChange={(e) =>
-                      setForm({ ...form, discount: Number(e.target.value) })
+                      setForm({
+                        ...form,
+                        discount_amount: Number(e.target.value),
+                      })
                     }
-                    className="rounded-full"
+                  />
+                </div>
+
+                <div>
+                  <Label>Discount Percentage</Label>
+                  <Input
+                    type="number"
+                    value={form.discount_percentage}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        discount_percentage: Number(e.target.value),
+                      })
+                    }
                   />
                 </div>
               </div>
 
-              <div className="flex flex-col">
-                <label className="mb-1 font-medium text-base">Stock</label>
-                <Input
-                  type="number"
-                  value={form.stock}
-                  onChange={(e) =>
-                    setForm({ ...form, stock: Number(e.target.value) })
-                  }
-                  className="rounded-full"
-                />
+              {/* RATING & STOCK */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>Rating</Label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={form.rating}
+                    onChange={(e) =>
+                      setForm({ ...form, rating: Number(e.target.value) })
+                    }
+                  />
+                </div>
+
+                <div>
+                  <Label>Stock</Label>
+                  <Input
+                    type="number"
+                    value={form.stock}
+                    onChange={(e) =>
+                      setForm({ ...form, stock: Number(e.target.value) })
+                    }
+                  />
+                </div>
               </div>
 
-              <div className="flex flex-col">
-                <label className="mb-1 font-medium text-base">
-                  Description
-                </label>
+              {/* PRE ORDER */}
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={form.pre_order_is}
+                  onChange={(e) =>
+                    setForm({ ...form, pre_order_is: e.target.checked })
+                  }
+                />
+                <Label>Pre Order</Label>
+              </div>
+
+              {form.pre_order_is && (
+                <div>
+                  <Label>Pre Order Duration (days)</Label>
+                  <Input
+                    type="number"
+                    value={form.pre_order_duration}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        pre_order_duration: Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+              )}
+
+              {/* DESCRIPTION */}
+              <div>
+                <Label>Description</Label>
                 <Textarea
-                  value={form.desc}
-                  onChange={(e) => setForm({ ...form, desc: e.target.value })}
-                  className="rounded-xl"
-                />
-              </div>
-
-              <div className="flex flex-col">
-                <label className="mb-1 font-medium text-base">
-                  PreOrder Duration (days)
-                </label>
-                <Input
-                  type="number"
-                  value={form.preOrder_duration}
+                  value={form.description}
                   onChange={(e) =>
-                    setForm({
-                      ...form,
-                      preOrder_duration: Number(e.target.value),
-                    })
+                    setForm({ ...form, description: e.target.value })
                   }
-                  className="rounded-full"
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              {/* SPECIFICATION */}
+              <div className="grid grid-cols-2 gap-3">
                 {Object.keys(form.specification).map((key) => (
-                  <div key={key} className="flex flex-col">
-                    <label className="mb-1 font-medium text-base">{key}</label>
+                  <div key={key}>
+                    <Label>{key}</Label>
                     <Input
                       value={form.specification[key as keyof Specification]}
                       onChange={(e) =>
@@ -401,28 +515,18 @@ export default function ProductsPage() {
                           ...form,
                           specification: {
                             ...form.specification,
-                            [key as keyof Specification]: e.target.value,
+                            [key]: e.target.value,
                           },
                         })
                       }
-                      className="rounded-full"
                     />
                   </div>
                 ))}
               </div>
             </div>
 
-            <DialogFooter className="mt-4 flex justify-end gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setOpenModal(false)}
-                className="rounded-full"
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleSave} className="rounded-full">
-                Save
-              </Button>
+            <DialogFooter>
+              <Button onClick={handleSave}>{editId ? "Update" : "Save"}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

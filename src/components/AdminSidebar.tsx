@@ -9,7 +9,7 @@ const AdminSidebar = () => {
   const path = usePathname();
 
   const menu = [
-    { name: "Dashboard", path: "/admin", icon: <FiHome /> },
+    // { name: "Dashboard", path: "/admin", icon: <FiHome /> },
     { name: "Users", path: "/admin/users", icon: <FiUsers /> },
     { name: "Products", path: "/admin/products", icon: <FiPlus /> },
     { name: "Orders", path: "/admin/orders", icon: <FiPackage /> },
