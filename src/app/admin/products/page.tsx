@@ -131,96 +131,80 @@ export default function ProductsPage() {
     setEditId(null);
   };
 
-  // 🔥 MULTIPLE UPLOAD
   const handleUploadImages = async () => {
-    const urls: string[] = [];
+    const formData = new FormData();
 
-    for (const file of imageFiles) {
-      const formData = new FormData();
+    imageFiles.forEach((file) => {
       formData.append("file", file);
-      formData.append("title", form.title);
+    });
 
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+    formData.append("title", form.title);
 
-      if (!res.ok) continue;
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: formData,
+    });
 
-      const data = await res.json();
-      urls.push(data.url);
-    }
+    if (!res.ok) return [];
 
-    return urls;
+    const data = await res.json();
+    return data.urls || [];
   };
 
   const handleSave = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return alert("Token tidak ada");
+    const token = localStorage.getItem("token");
+    if (!token) return alert("Token tidak ada");
 
-      let uploadedImages: string[] = [];
+    let gallery: string[] = existingImages;
 
-      // 🔥 kalau ada upload baru
-      if (imageFiles.length > 0) {
-        uploadedImages = await handleUploadImages();
-      }
-
-      // 🔥 FIX: jangan pakai previews
-      const gallery =
-        uploadedImages.length > 0 ? uploadedImages : existingImages;
-
-      const body = {
-        title: form.title,
-        src_url: gallery[0],
-        gallery: gallery,
-
-        price_idr: Number(form.price_idr),
-        price_usd: Number(form.price_usd),
-        discount_amount: Number(form.discount_amount),
-        discount_percentage: Number(form.discount_percentage),
-        rating: Number(form.rating),
-        stock: Number(form.stock),
-
-        category: form.category,
-        description: form.description,
-
-        pre_order_is: form.pre_order_is,
-        pre_order_duration: Number(form.pre_order_duration),
-
-        specification: {
-          "Blade Shape": form.specification["Blade Shape"] || "-",
-          "Steel Type": form.specification["Steel Type"] || "-",
-          "Blade Length": form.specification["Blade Length"] || "-",
-          "Blade Height": form.specification["Blade Height"] || "-",
-          "Handle Type": form.specification["Handle Type"] || "-",
-          "Handle Materials": form.specification["Handle Materials"] || "-",
-        },
-      };
-
-      const url = editId
-        ? `https://api-pisaupedia.vercel.app/api/products/${editId}`
-        : `https://api-pisaupedia.vercel.app/api/products`;
-
-      const method = editId ? "PUT" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) return alert("Gagal save");
-
-      setOpenModal(false);
-      resetForm();
-      fetchProducts();
-    } catch (err) {
-      alert("Error");
+    if (imageFiles.length > 0) {
+      gallery = await handleUploadImages();
     }
+
+    const body = {
+      title: form.title,
+      src_url: gallery[0],
+      gallery: gallery,
+
+      price_idr: Number(form.price_idr),
+      price_usd: Number(form.price_usd),
+      discount_amount: Number(form.discount_amount),
+      discount_percentage: Number(form.discount_percentage),
+      rating: Number(form.rating),
+      stock: Number(form.stock),
+
+      category: form.category,
+      description: form.description,
+
+      pre_order_is: form.pre_order_is,
+      pre_order_duration: Number(form.pre_order_duration),
+
+      specification: form.specification,
+    };
+
+    const url = editId
+      ? `https://api-pisaupedia.vercel.app/api/products/${editId}`
+      : `https://api-pisaupedia.vercel.app/api/products`;
+
+    const method = editId ? "PUT" : "POST";
+
+    const res = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) return alert("Gagal save");
+
+    // 🔥 langsung tampilkan dari URL asli
+    setPreviews(gallery);
+
+    setOpenModal(false);
+    resetForm();
+    fetchProducts();
   };
 
   const handleEdit = (p: Product) => {
@@ -389,17 +373,13 @@ export default function ProductsPage() {
                   onChange={(e) => {
                     const files = Array.from(e.target.files || []);
                     setImageFiles(files);
-
-                    const urls = files.map((f) => URL.createObjectURL(f));
-                    setPreviews(urls);
                   }}
                 />
-
                 <div className="flex gap-2 mt-2 flex-wrap">
                   {previews.map((img, i) => (
                     <Image key={i} src={img} alt="" width={80} height={80} />
                   ))}
-                </div>
+                </div>{" "}
               </div>
 
               {/* PRICE */}
