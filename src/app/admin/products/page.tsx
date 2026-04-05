@@ -61,7 +61,7 @@ type Product = {
 
 export default function ProductsPage() {
   const router = useRouter();
-
+  const [existingImages, setExistingImages] = useState<string[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [openModal, setOpenModal] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -124,8 +124,10 @@ export default function ProductsPage() {
       pre_order_duration: 0,
       specification: { ...initialSpec },
     });
+
     setImageFiles([]);
     setPreviews([]);
+    setExistingImages([]); // 🔥 tambahin ini
     setEditId(null);
   };
 
@@ -159,11 +161,14 @@ export default function ProductsPage() {
 
       let uploadedImages: string[] = [];
 
+      // 🔥 kalau ada upload baru
       if (imageFiles.length > 0) {
         uploadedImages = await handleUploadImages();
       }
 
-      const gallery = uploadedImages.length > 0 ? uploadedImages : previews;
+      // 🔥 FIX: jangan pakai previews
+      const gallery =
+        uploadedImages.length > 0 ? uploadedImages : existingImages;
 
       const body = {
         title: form.title,
@@ -236,7 +241,13 @@ export default function ProductsPage() {
       specification: p.specification,
     });
 
-    setPreviews(p.gallery?.length ? p.gallery : [p.src_url]);
+    // 🔥 simpan gambar asli (bukan blob)
+    const realImages = p.gallery?.length ? p.gallery : [p.src_url];
+
+    setExistingImages(realImages);
+    setPreviews(realImages); // buat tampil
+    setImageFiles([]);
+
     setOpenModal(true);
   };
 
