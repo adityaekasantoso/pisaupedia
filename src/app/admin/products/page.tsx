@@ -37,8 +37,6 @@ type Specification = {
   "Steel Type": string;
   "Blade Length": string;
   "Blade Height": string;
-  "Spine Thickness"?: string;
-  "Handle Length"?: string;
   "Handle Type": string;
   "Handle Materials": string;
 };
@@ -66,17 +64,16 @@ export default function ProductsPage() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [openModal, setOpenModal] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState("");
   const [editId, setEditId] = useState<number | null>(null);
+
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
 
   const initialSpec: Specification = {
     "Blade Shape": "",
     "Steel Type": "",
     "Blade Length": "",
     "Blade Height": "",
-    "Spine Thickness": "",
-    "Handle Length": "",
     "Handle Type": "",
     "Handle Materials": "",
   };
@@ -104,7 +101,7 @@ export default function ProductsPage() {
     if (user.role !== "admin") return router.push("/");
 
     fetchProducts();
-  }, [router]);
+  }, []);
 
   const fetchProducts = async () => {
     const res = await fetch("https://api-pisaupedia.vercel.app/api/products");
@@ -127,27 +124,32 @@ export default function ProductsPage() {
       pre_order_duration: 0,
       specification: { ...initialSpec },
     });
-    setImageFile(null);
-    setPreview("");
+    setImageFiles([]);
+    setPreviews([]);
     setEditId(null);
   };
 
-  const handleUploadImage = async () => {
-    if (!imageFile) return "";
+  // 🔥 MULTIPLE UPLOAD
+  const handleUploadImages = async () => {
+    const urls: string[] = [];
 
-    const formData = new FormData();
-    formData.append("file", imageFile);
-    formData.append("title", form.title);
+    for (const file of imageFiles) {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("title", form.title);
 
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
 
-    if (!res.ok) return "";
+      if (!res.ok) continue;
 
-    const data = await res.json();
-    return data.url;
+      const data = await res.json();
+      urls.push(data.url);
+    }
+
+    return urls;
   };
 
   const handleSave = async () => {
@@ -155,17 +157,18 @@ export default function ProductsPage() {
       const token = localStorage.getItem("token");
       if (!token) return alert("Token tidak ada");
 
-      let imageUrl = "";
+      let uploadedImages: string[] = [];
 
-      // 🔥 kalau upload gambar baru
-      if (imageFile) {
-        imageUrl = await handleUploadImage();
+      if (imageFiles.length > 0) {
+        uploadedImages = await handleUploadImages();
       }
+
+      const gallery = uploadedImages.length > 0 ? uploadedImages : previews;
 
       const body = {
         title: form.title,
-        src_url: imageUrl || preview, // 🔥 pakai lama kalau tidak upload
-        gallery: [imageUrl || preview],
+        src_url: gallery[0],
+        gallery: gallery,
 
         price_idr: Number(form.price_idr),
         price_usd: Number(form.price_usd),
@@ -230,13 +233,10 @@ export default function ProductsPage() {
       stock: p.stock,
       pre_order_is: p.pre_order_is,
       pre_order_duration: p.pre_order_duration,
-      specification: {
-        ...initialSpec,
-        ...p.specification,
-      },
+      specification: p.specification,
     });
 
-    setPreview(p.src_url);
+    setPreviews(p.gallery?.length ? p.gallery : [p.src_url]);
     setOpenModal(true);
   };
 
@@ -261,12 +261,13 @@ export default function ProductsPage() {
       <AdminSidebar />
 
       <main className="flex-1 p-6">
-        <Card>
+        <Card className="shadow-none">
           <CardHeader className="flex justify-between flex-row">
             <CardTitle className="text-xl font-bold">
               Product Management
             </CardTitle>
             <Button
+              className="rounded-full"
               onClick={() => {
                 resetForm();
                 setOpenModal(true);
@@ -284,9 +285,7 @@ export default function ProductsPage() {
                     <TableHead>Image</TableHead>
                     <TableHead>Title</TableHead>
                     <TableHead>Category</TableHead>
-                    <TableHead>Price IDR</TableHead>
-                    <TableHead>Price USD</TableHead>
-
+                    <TableHead>Price</TableHead>
                     <TableHead>Stock</TableHead>
                     <TableHead>Action</TableHead>
                   </TableRow>
@@ -301,12 +300,17 @@ export default function ProductsPage() {
                       <TableCell>{p.title}</TableCell>
                       <TableCell>{p.category}</TableCell>
                       <TableCell>Rp {p.price_idr}</TableCell>
-                      <TableCell>${p.price_usd}</TableCell>
                       <TableCell>{p.stock}</TableCell>
                       <TableCell className="flex gap-2">
-                        <Button onClick={() => handleEdit(p)}>Edit</Button>
+                        <Button
+                          className="rounded-full"
+                          onClick={() => handleEdit(p)}
+                        >
+                          Edit
+                        </Button>
                         <Button
                           variant="destructive"
+                          className="rounded-full"
                           onClick={() => handleDelete(p.id)}
                         >
                           Delete
@@ -320,14 +324,14 @@ export default function ProductsPage() {
           </CardContent>
         </Card>
 
+        {/* MODAL */}
         <Dialog open={openModal} onOpenChange={setOpenModal}>
-          <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-h-[90vh] overflow-y-auto rounded-xl">
             <DialogHeader>
               <DialogTitle>
                 {editId ? "Edit Product" : "Create Product"}
               </DialogTitle>
             </DialogHeader>
-
             <div className="space-y-4">
               {/* TITLE */}
               <div>
@@ -367,19 +371,24 @@ export default function ProductsPage() {
 
               {/* IMAGE */}
               <div>
-                <Label>Image</Label>
+                <Label>Images</Label>
                 <Input
                   type="file"
+                  multiple
                   onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    setImageFile(file);
-                    setPreview(URL.createObjectURL(file));
+                    const files = Array.from(e.target.files || []);
+                    setImageFiles(files);
+
+                    const urls = files.map((f) => URL.createObjectURL(f));
+                    setPreviews(urls);
                   }}
                 />
-                {preview && (
-                  <Image src={preview} alt="" width={120} height={120} />
-                )}
+
+                <div className="flex gap-2 mt-2 flex-wrap">
+                  {previews.map((img, i) => (
+                    <Image key={i} src={img} alt="" width={80} height={80} />
+                  ))}
+                </div>
               </div>
 
               {/* PRICE */}
@@ -526,7 +535,9 @@ export default function ProductsPage() {
             </div>
 
             <DialogFooter>
-              <Button onClick={handleSave}>{editId ? "Update" : "Save"}</Button>
+              <Button className="rounded-full" onClick={handleSave}>
+                {editId ? "Update" : "Save"}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

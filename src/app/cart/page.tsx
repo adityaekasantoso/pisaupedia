@@ -111,7 +111,7 @@ export default function CartPage() {
           Payment Method: PayPal
         `;
 
-        const phoneNumber = "6281575332411";
+        const phoneNumber = "628118801117";
         const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
         window.location.href = whatsappUrl;
       }

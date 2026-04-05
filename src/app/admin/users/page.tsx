@@ -154,13 +154,15 @@ export default function UsersPage() {
       <AdminSidebar />
 
       <main className="flex-1 p-6 overflow-y-auto">
-        <Card>
+        <Card className="shadow-none">
           <CardHeader className="flex justify-between flex-row">
             <CardTitle className="text-xl font-bold">
               Users Management
             </CardTitle>
 
-            <Button onClick={() => handleOpenModal()}>Add User</Button>
+            <Button className="rounded-full" onClick={() => handleOpenModal()}>
+              Add User
+            </Button>
           </CardHeader>
 
           <CardContent>
@@ -183,9 +185,15 @@ export default function UsersPage() {
                       <TableCell>{u.role}</TableCell>
 
                       <TableCell className="flex gap-2">
-                        <Button onClick={() => handleOpenModal(u)}>Edit</Button>
+                        <Button
+                          className="rounded-full"
+                          onClick={() => handleOpenModal(u)}
+                        >
+                          Edit
+                        </Button>
 
                         <Button
+                          className="rounded-full"
                           variant="destructive"
                           onClick={() => handleDelete(u.id)}
                         >
@@ -259,7 +267,7 @@ export default function UsersPage() {
             </div>
 
             <DialogFooter>
-              <Button onClick={handleSave}>
+              <Button className="rounded-full" onClick={handleSave}>
                 {selectedUser ? "Update" : "Save"}
               </Button>
             </DialogFooter>
